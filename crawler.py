@@ -2,6 +2,8 @@
 import requests
 import urlparse
 import logging
+import time
+import random
 import datetime as dt
 from optparse import OptionParser
 from bs4 import BeautifulSoup
@@ -122,14 +124,14 @@ if __name__ == '__main__':
             bid_table = bid_soup.find('div', {'id': 'print_area'})
             bid_rows = bid_table.findAll('tr')[1:-1]
             for bid_row in bid_rows:
-                link = [tag['href'] for tag in
-                        bid_row.findAll('a', {'href': True})][0]
+                link = [tag['href'] for tag in bid_row.findAll('a', {'href': True})][0]
                 link_href = urlparse.urljoin('http://web.pcc.gov.tw/tps/pss/tender.do?'
                                              'searchMode=common&'
                                              'searchType=advance',
                                              link)
                 bid_file.write(link_href + '\n')
             bid_file.flush()
+            time.sleep(random(0, 2))  # Prevent being treated as DDOS attack
 
     bid_file.close()
     logger.info('All done.')
