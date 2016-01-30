@@ -131,7 +131,7 @@ if __name__ == '__main__':
                                              link)
                 bid_file.write(link_href + '\n')
             bid_file.flush()
-            time.sleep(random.randint(0, 1))  # Prevent being treated as DDOS attack
+            time.sleep(random.randint(0, 2))  # Prevent being treated as DDOS attack
 
     bid_file.close()
     logger.info('All done.')
