@@ -10,7 +10,6 @@ from bs4 import BeautifulSoup
 from math import ceil
 
 _ERRCODE_DATE = 2
-_ERROR_CODE_FILENAME = 3
 
 logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
 logger = logging.getLogger(__name__)
