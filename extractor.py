@@ -1,4 +1,7 @@
 # -*- coding: utf-8 -*-
+""" Extractor
+Some English translation is found in https://www.pcc.gov.tw/epaper/10207/abc.htm"""
+
 import os
 import re
 import logging
@@ -31,6 +34,15 @@ def remove_space(element):
 
 def unescape_conversion(element):
     return remove_space(element).replace('&lt;', '<').replace('&gt;', '>')
+
+
+def yesno_conversion(element):
+    m = re.match(ur'.*是.*', element.strip())
+    return m is not None
+
+
+def int_conversion(element):
+    return int(element.strip())
 
 
 def date_conversion(element):
@@ -71,20 +83,41 @@ procurement_info_map = {
     '標案案號': ('job_number', remove_space),
     '招標方式': ('procurement_type', remove_space),
     '決標方式': ('tender_awarding_type', remove_space),
+    '是否依政府採購法施行細則第64條之2辦理': ('is_follow_law_64_2', yesno_conversion),
+    '新增公告傳輸次數': ('num_transmit', int_conversion),
+    '是否依據採購法第106條第1項第1款辦理': ('is_follow_law_106_1_1', yesno_conversion),
     '標案名稱': ('subject_of_procurement', remove_space),
-    '決標資料類別': ('attr_of_tender_awarding', remove_space),
+    '決標資料類別': ('attr_of_awarding', remove_space),
+    '是否屬共同供應契約採購': ('is_inter_entity_supply_contract', yesno_conversion),
+    '是否屬二以上機關之聯合採購(不適用共同供應契約規定)': ('is_joint_procurement', yesno_conversion),
+    '是否複數決標': ('is_multiple_award', yesno_conversion),
+    '是否共同投標': ('is_joint_tender', yesno_conversion),
     '標的分類': ('attr_of_procurement', unescape_conversion),
-    '預算金額': ('budget_value', money_conversion),
+    '是否屬統包': ('is_design_build_contract', yesno_conversion),
+    '是否應依公共工程專業技師簽證規則實施技師簽證': ('is_engineer_certification_required', yesno_conversion),
     '開標時間': ('opening_date', date_conversion),
+    '原公告日期': ('original_publication_date', date_conversion),
+    '採購金額級距': ('procurement_money_amount_level', remove_space),
+    '辦理方式': ('conduct_procurement', remove_space),
+    '是否適用WTO政府採購協定(GPA)：': ('is_gpa', yesno_conversion),
+    '是否適用臺紐經濟合作協定(ANZTEC)：': ('is_anztec', yesno_conversion),
+    '是否適用臺星經濟夥伴協定(ASTEP)：': ('is_astep', yesno_conversion),
+    '預算金額是否公開': ('is_budget_amount_public', yesno_conversion),
+    '預算金額': ('budget_amount', money_conversion),
+    '是否受機關補助': ('is_org_subsidy', yesno_conversion),
+    '履約地點': ('fulfill_location', strip),
+    '履約地點（含地區）': ('fulfill_location_district', strip),
+    '是否含特別預算': ('is_special_budget', yesno_conversion),
     '歸屬計畫類別': ('project_type', remove_space),
-    '總決標金額': ('total_tender_awarding_value', date_conversion),
+    '本案採購契約是否採用主管機關訂定之範本': ('is_authorities_template', yesno_conversion),
     'pkAtmMain': ('pkAtmMain', strip)}
 
 award_info_map = {
     # award_table_tr_6
-    '底價金額': ('floor_price_value', money_conversion),
     '決標日期': ('tender_awarding_date', date_conversion),
-    '決標公告日期': ('tender_awarding_announce_date', date_conversion)}
+    '決標公告日期': ('tender_awarding_announce_date', date_conversion),
+    '底價金額': ('floor_price_value', money_conversion),
+    '總決標金額': ('total_tender_awarding_value', date_conversion)}
 
 tender_award_item_map = {
     '得標廠商': 'awarded_tenderer',
@@ -106,7 +139,7 @@ def get_organization_info_dic(element):
     for tr in award_table_tr:
         th = tr.find('th')
         if th is not None:
-            th_name = th.text.encode('utf-8').strip()
+            th_name = remove_space(th.text.encode('utf-8'))
             if th_name in mapper:
                 key = mapper[th_name][0]
                 content = tr.find('td').text
@@ -127,11 +160,25 @@ def get_procurement_info_dic(element):
     for tr in award_table_tr:
         th = tr.find('th')
         if th is not None:
-            th_name = th.text.encode('utf-8').strip()
+            th_name = remove_space(th.text.encode('utf-8'))
             if th_name in mapper:
                 key = mapper[th_name][0]
                 content = tr.find('td').text
                 returned_dic[key] = mapper[th_name][1](content) if len(mapper[th_name]) == 2 else content
+                continue
+
+            # Special case
+            if th_name == '是否適用條約或協定之採購':
+                content = remove_space(tr.find('td').text)
+                m_str = ur'.*\(GPA\)：(?P<gpa>[是否]).*\(ANZTEC\)：(?P<anztec>[是否]).*\(ASTEP\)：(?P<astep>[是否]).*'
+                m = re.match(m_str, content)
+                if m is not None:
+                    returned_dic['is_gpa'] = \
+                        yesno_conversion(m.group('gpa')) if m.group('gpa') is not None else content
+                    returned_dic['is_anztec'] = \
+                        yesno_conversion(m.group('anztec')) if m.group('anztec') is not None else content
+                    returned_dic['is_astep'] = \
+                        yesno_conversion(m.group('astep')) if m.group('astep') is not None else content
 
     # Print returned_dic
     if logging.getLogger().isEnabledFor(logging.DEBUG):
@@ -148,7 +195,7 @@ def get_award_info_dic(element):
     for tr in award_table_tr:
         th = tr.find('th')
         if th is not None:
-            th_name = th.text.encode('utf-8').strip()
+            th_name = remove_space(th.text.encode('utf-8'))
             if th_name in mapper:
                 key = mapper[th_name][0]
                 content = tr.find('td').text
@@ -248,7 +295,10 @@ if __name__ == '__main__':
         logger.error('No such directory: ' + directory)
         quit(_ERRCODE_DIR)
 
-    response_element = get_response_element(directory + '/' + '51744761_09.txt')
+    response_element = get_response_element(directory + '/' + 'with_judge_51771498_10531015R01.txt')
+    # response_element = get_response_element(directory + '/' + 'many_items_51772417_YL1041215P1.txt')
+    # response_element = get_response_element(directory + '/' + '51744761_09.txt')
+
     get_organization_info_dic(response_element)
     get_procurement_info_dic(response_element)
     get_tenderer_info_dic(response_element)
