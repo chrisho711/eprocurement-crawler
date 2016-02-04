@@ -69,7 +69,7 @@ def phone_conversion(element):
 
 
 organization_info_map = {
-    # award_table_tr_1
+    # <tr class="award_table_tr_1">
     '機關代碼': ('org_id', remove_space),
     '機關名稱': ('org_name', remove_space),
     '單位名稱': ('unit_name', remove_space),
@@ -79,7 +79,7 @@ organization_info_map = {
     '傳真號碼': ('fax', phone_conversion)}
 
 procurement_info_map = {
-    # award_table_tr_2
+    # <tr class="award_table_tr_2">
     '標案案號': ('job_number', remove_space),
     '招標方式': ('procurement_type', remove_space),
     '決標方式': ('awarding_type', remove_space),
@@ -99,9 +99,9 @@ procurement_info_map = {
     '原公告日期': ('original_publication_date', date_conversion),
     '採購金額級距': ('procurement_money_amount_level', remove_space),
     '辦理方式': ('conduct_procurement', remove_space),
-    '是否適用WTO政府採購協定(GPA)：': ('is_gpa',),  # Require special process
-    '是否適用臺紐經濟合作協定(ANZTEC)：': ('is_anztec',),  # Require special process
-    '是否適用臺星經濟夥伴協定(ASTEP)：': ('is_astep',),  # Require special process
+    '是否適用WTO政府採購協定(GPA)：': ('is_gpa',),  # Special processing required
+    '是否適用臺紐經濟合作協定(ANZTEC)：': ('is_anztec',),  # Special processing required
+    '是否適用臺星經濟夥伴協定(ASTEP)：': ('is_astep',),  # Special processing required
     '預算金額是否公開': ('is_budget_amount_public', yesno_conversion),
     '預算金額': ('budget_amount', money_conversion),
     '是否受機關補助': ('is_org_subsidy', yesno_conversion),
@@ -124,8 +124,13 @@ tenderer_map = {
     '是否得標': 'is_awarded',
     '組織型態': 'organization_type'}
 
+evaluation_committee_info_map = {
+    # <tr class="award_table_tr_4_1"> <td id="mat_venderArguTd">
+    '評選委員': ('evaluation_committee',)  # Special processing required
+}
+
 award_info_map = {
-    # award_table_tr_6
+    # <tr class="award_table_tr_6">
     '決標公告序號': ('award_announce_sn', remove_space),
     '決標日期': ('awarding_date', date_conversion),
     '決標公告日期': ('awarding_announce_date', date_conversion),
@@ -136,8 +141,8 @@ award_info_map = {
     '總決標金額是否公開': ('is_total_award_price_public', yesno_conversion),
     '契約是否訂有依物價指數調整價金規定': ('is_price_dynamic_with_cpi', yesno_conversion),
     '未列物價調整規定說明': ('no_price_dynamic_description', remove_space),
-    '履約執行機關代碼': ('fulfill_execution_org_id',),  # Require special process
-    '履約執行機關名稱': ('fulfill_execution_org_name',),  # Require special process
+    '履約執行機關代碼': ('fulfill_execution_org_id',),  # Special processing required
+    '履約執行機關名稱': ('fulfill_execution_org_name',),  # Special processing required
     '附加說明': ('additional_info', strip)}
 
 
@@ -195,6 +200,27 @@ def get_procurement_info_dic(element):
             logger.debug(u'{}\t{}'.format(k, v))
 
     return returned_dic
+
+
+def get_evaluation_committee_info_list(element):
+    returned_list = []
+    mat_venderargutd = element.find('td', {'id': 'mat_venderArguTd'})
+    committee = mat_venderargutd.findAll('td')
+    if len(committee) > 0 and len(committee) % 4 == 0:
+        for i in range(0, len(committee) / 4):
+            rec = [int(committee[i * 4].text.strip()),  # 項次
+                   yesno_conversion(committee[i * 4 + 1].text.strip()),  # 出席會議
+                   remove_space(committee[i * 4 + 2].text.strip()),  # 姓名
+                   remove_space(committee[i * 4 + 3].text.strip())  # 職業
+                   ]
+            returned_list.append(rec)
+
+    # Print returned_dic
+    if logging.getLogger().isEnabledFor(logging.DEBUG):
+        for c in returned_list:
+            logger.debug(u'{}\t{}\t{}\t{}'.format(c[0], c[1], c[2], c[3]))
+
+    return returned_list
 
 
 def get_award_info_dic(element):
@@ -315,12 +341,13 @@ if __name__ == '__main__':
         logger.error('No such directory: ' + directory)
         quit(_ERRCODE_DIR)
 
-    response_element = get_response_element(directory + '/' + 'with_judge_51771498_10531015R01.txt')
+    response_element = get_response_element(directory + '/' + 'with_committee_51759078_MOTC-IOT-104-IEB048.txt')
     # response_element = get_response_element(directory + '/' + 'many_items_51772417_YL1041215P1.txt')
     # response_element = get_response_element(directory + '/' + '51744761_09.txt')
 
-    get_organization_info_dic(response_element)
-    get_procurement_info_dic(response_element)
-    get_tenderer_info_dic(response_element)
-    get_tender_award_item_dic(response_element)
-    get_award_info_dic(response_element)
+    # get_organization_info_dic(response_element)
+    # get_procurement_info_dic(response_element)
+    # get_tenderer_info_dic(response_element)
+    # get_tender_award_item_dic(response_element)
+    get_evaluation_committee_info_list(response_element)
+    # get_award_info_dic(response_element)
