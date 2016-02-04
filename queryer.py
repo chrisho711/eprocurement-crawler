@@ -1,4 +1,8 @@
-# -*- coding: utf-8 -*-
+#!/usr/bin/python
+#  -*- coding: utf-8 -*-
+""" Queryer for Taiwan government e-procurement website
+Modified from the source code provided by https://github.com/ywchiu/pythonetl"""
+
 import requests
 import urlparse
 import logging
@@ -8,6 +12,9 @@ import datetime as dt
 from optparse import OptionParser
 from bs4 import BeautifulSoup
 from math import ceil
+
+__author__ = "Yu-chun Huang"
+__version__ = "1.0.0b"
 
 _ERRCODE_DATE = 2
 

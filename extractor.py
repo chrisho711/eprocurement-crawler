@@ -1,6 +1,7 @@
-# -*- coding: utf-8 -*-
-""" Extractor
-Some English translation is found in https://www.pcc.gov.tw/epaper/10207/abc.htm"""
+#!/usr/bin/python
+#  -*- coding: utf-8 -*-
+""" Extractor for Taiwan government e-procurement website
+Modified from the source code provided by https://github.com/ywchiu/pythonetl"""
 
 import os
 import re
@@ -8,6 +9,9 @@ import logging
 from optparse import OptionParser
 from bs4 import BeautifulSoup
 from datetime import datetime, date
+
+__author__ = "Yu-chun Huang"
+__version__ = "1.0.0b"
 
 _ERRCODE_FILENAME = 3
 

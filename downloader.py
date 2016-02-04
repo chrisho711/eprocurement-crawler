@@ -1,4 +1,8 @@
-# -*- coding: utf-8 -*-
+#!/usr/bin/python
+#  -*- coding: utf-8 -*-
+""" Downloader for Taiwan government e-procurement website
+Modified from the source code provided by https://github.com/ywchiu/pythonetl"""
+
 import os
 import requests
 import logging
@@ -7,6 +11,9 @@ import re
 import random
 from optparse import OptionParser
 from bs4 import BeautifulSoup
+
+__author__ = "Yu-chun Huang"
+__version__ = "1.0.0b"
 
 _ERRCODE_FILENAME = 3
 _ERRCODE_DIR = 4
