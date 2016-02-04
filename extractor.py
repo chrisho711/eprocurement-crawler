@@ -63,8 +63,8 @@ def money_conversion(element):
     return int(''.join(m.group(0).split(',')))
 
 
-def phone_conversion(element):
-    m = re.match(r'(\((?P<area>\d+)\))?(?P<number>\d+)', element.strip())
+def tel_conversion(element):
+    m = re.match(r'(\((?P<area>\d+)\))?\s*(?P<number>\d+)', element.strip())
     return m.group('area') + '-' + m.group('number') if m.group('area') is not None else m.group('number')
 
 
@@ -75,8 +75,8 @@ organization_info_map = {
     '單位名稱': ('unit_name', remove_space),
     '機關地址': ('org_address', remove_space),
     '聯絡人': ('contact', strip),
-    '聯絡電話': ('phone', phone_conversion),
-    '傳真號碼': ('fax', phone_conversion)}
+    '聯絡電話': ('tel', tel_conversion),
+    '傳真號碼': ('fax', tel_conversion)}
 
 procurement_info_map = {
     # <tr class="award_table_tr_2">
@@ -112,21 +112,36 @@ procurement_info_map = {
     '本案採購契約是否採用主管機關訂定之範本': ('is_authorities_template', yesno_conversion),
     'pkAtmMain': ('pkAtmMain', strip)}
 
+tenderer_map = {
+    # <tr class="award_table_tr_3">
+    '廠商代碼': ('tenderer_id', strip),
+    '廠商名稱': ('tenderer_name', strip),
+    '廠商名稱(英)': ('tenderer_name_eng', strip),
+    '是否得標': ('is_awarded', yesno_conversion),
+    '組織型態': ('organization_type', remove_space),
+    '廠商業別': ('industry_type', remove_space),
+    '廠商地址': ('address', strip),
+    '廠商地址(英)': ('address_eng', strip),
+    '廠商電話': ('tel', tel_conversion),
+    '決標金額': ('award_price', money_conversion),
+    '得標廠商國別': ('country', strip),
+    '是否為中小企業': ('is_sm_enterprise', yesno_conversion),
+    '履約起日': ('fulfill_date_start', date_conversion),  # Special processing required
+    '履約迄日': ('fulfill_date_end', date_conversion),  # Special processing required
+    '雇用員工總人數是否超過100人': ('is_employee_over_100', yesno_conversion)}
+
 tender_award_item_map = {
     '得標廠商': 'awarded_tenderer',
     '預估需求數量': 'request_number',
-    '決標金額': 'awarding_value',
+    '決標金額': 'award_price',
     '底價金額': 'base_price'}
-
-tenderer_map = {
-    '廠商代碼': 'tenderer_code',
-    '廠商名稱': 'tenderer_name',
-    '是否得標': 'is_awarded',
-    '組織型態': 'organization_type'}
 
 evaluation_committee_info_map = {
     # <tr class="award_table_tr_4_1"> <td id="mat_venderArguTd">
-    '評選委員': ('evaluation_committee',)  # Special processing required
+    '項次': ('sn',),  # Special processing required
+    '出席會議': ('is_attend',),  # Special processing required
+    '姓名': ('name',),  # Special processing required
+    '職業': ('occupation',)  # Special processing required
 }
 
 award_info_map = {
@@ -202,83 +217,42 @@ def get_procurement_info_dic(element):
     return returned_dic
 
 
-def get_evaluation_committee_info_list(element):
-    returned_list = []
-    mat_venderargutd = element.find('td', {'id': 'mat_venderArguTd'})
-    if mat_venderargutd is not None:
-        committee = mat_venderargutd.findAll('td')
-        if committee is not None and len(committee) > 0 and len(committee) % 4 == 0:
-            for i in range(0, len(committee) / 4):
-                rec = [int(committee[i * 4].text.strip()),  # 項次
-                       yesno_conversion(committee[i * 4 + 1].text.strip()),  # 出席會議
-                       remove_space(committee[i * 4 + 2].text.strip()),  # 姓名
-                       remove_space(committee[i * 4 + 3].text.strip())  # 職業
-                       ]
-                returned_list.append(rec)
-
-    # Print returned_dic
-    if logging.getLogger().isEnabledFor(logging.DEBUG):
-        for c in returned_list:
-            logger.debug(u'{}\t{}\t{}\t{}'.format(c[0], c[1], c[2], c[3]))
-
-    return returned_list
-
-
-def get_award_info_dic(element):
-    returned_dic = {}
-    mapper = award_info_map
-    award_table_tr = element.findAll('tr', {'class': 'award_table_tr_6'})
-    for tr in award_table_tr:
-        th = tr.find('th')
-        if th is not None:
-            th_name = remove_space(th.text.encode('utf-8'))
-            if th_name in mapper:
-                key = mapper[th_name][0]
-                content = tr.find('td').text
-                returned_dic[key] = mapper[th_name][1](content) if len(mapper[th_name]) == 2 else content
-
-            # Special case
-            if th_name == '履約執行機關':
-                content = remove_space(tr.find('td').text)
-                m_str = ur'.*機關代碼：(?P<id>[0-9\.]+).*機關名稱：(?P<name>.+)'
-                m = re.match(m_str, content)
-                if m is not None:
-                    returned_dic['fulfill_execution_org_id'] = \
-                        remove_space(m.group('id')) if m.group('id') is not None else content
-                    returned_dic['fulfill_execution_org_name'] = \
-                        remove_space(m.group('name')) if m.group('name') is not None else content
-
-    # Print returned_dic
-    if logging.getLogger().isEnabledFor(logging.DEBUG):
-        for k, v in returned_dic.iteritems():
-            logger.debug(u'{}\t{}'.format(k, v))
-
-    return returned_dic
-
-
 def get_tenderer_info_dic(element):
     returned_dic = {}
-    award_table_tr_3 = element.findAll('tr', {'class': 'award_table_tr_3'})
-    for tr in award_table_tr_3:
+    mapper = tenderer_map
+    award_table_tr = element.findAll('tr', {'class': 'award_table_tr_3'})
+    for tr in award_table_tr:
         tb = tr.find('table')
         grp_num = 0
         if tb is not None:
             row = tb.findAll('tr')
             for r in row:
-                th = r.find('th').text
-                m = re.match(r'投標廠商(\d+)', th.encode('utf-8').strip())
+                th_name = remove_space(r.find('th').text.encode('utf-8'))
+                m = re.match(r'投標廠商(\d+)', th_name)
                 if m is not None:
                     grp_num = int(m.group(1))
                     returned_dic[grp_num] = {'tenderer_num': grp_num}
                 else:
-                    if th.encode('utf-8').strip() in tenderer_map:
-                        returned_dic[grp_num][tenderer_map[th.encode('utf-8').strip()]] = r.find('td').text.strip()
+                    if th_name in mapper:
+                        key = mapper[th_name][0]
+                        content = r.find('td').text
+                        if len(mapper[th_name]) == 2:
+                            returned_dic[grp_num][key] = mapper[th_name][1](content)
+                        else:
+                            returned_dic[grp_num][key] = content
+
+                    # Special case
+                    if th_name == '履約起迄日期':
+                        content = remove_space(r.find('td').text.encode('utf-8'))
+                        date_range = content.split('－')
+                        returned_dic[grp_num]['fulfill_date_start'] = date_conversion(date_range[0])
+                        returned_dic[grp_num]['fulfill_date_end'] = date_conversion(date_range[1])
 
     # Print returned_dic
     if logging.getLogger().isEnabledFor(logging.DEBUG):
-        for rec in returned_dic:
-            for i in returned_dic[rec]:
-                logger.debug(u'{}\t{}'.format(i, returned_dic[rec][i]))
+        for grp_num in returned_dic:
+            for k, v in returned_dic[grp_num].iteritems():
+                logger.debug(u'{}\t{}\t{}'.format(grp_num, k, v))
 
     return returned_dic
 
@@ -327,6 +301,61 @@ def get_tender_award_item_dic(element):
     return returned_dic
 
 
+def get_evaluation_committee_info_list(element):
+    returned_list = []
+    mapper = evaluation_committee_info_map
+    mat_venderargutd = element.find('td', {'id': 'mat_venderArguTd'})
+    if mat_venderargutd is not None:
+        committee = mat_venderargutd.findAll('td')
+        if committee is not None and len(committee) > 0 and len(committee) % 4 == 0:
+            for i in range(0, len(committee) / 4):
+                rec = {mapper['項次'][0]: int(committee[i * 4].text.strip()),
+                       mapper['出席會議'][0]: yesno_conversion(committee[i * 4 + 1].text.strip()),
+                       mapper['姓名'][0]: remove_space(committee[i * 4 + 2].text.strip()),
+                       mapper['職業'][0]: remove_space(committee[i * 4 + 3].text.strip())}
+                returned_list.append(rec)
+
+    # Print returned_dic
+    if logging.getLogger().isEnabledFor(logging.DEBUG):
+        for c in returned_list:
+            for k, v in c.iteritems():
+                logger.debug(u'{}\t{}'.format(k, v))
+
+    return returned_list
+
+
+def get_award_info_dic(element):
+    returned_dic = {}
+    mapper = award_info_map
+    award_table_tr = element.findAll('tr', {'class': 'award_table_tr_6'})
+    for tr in award_table_tr:
+        th = tr.find('th')
+        if th is not None:
+            th_name = remove_space(th.text.encode('utf-8'))
+            if th_name in mapper:
+                key = mapper[th_name][0]
+                content = tr.find('td').text
+                returned_dic[key] = mapper[th_name][1](content) if len(mapper[th_name]) == 2 else content
+
+            # Special case
+            if th_name == '履約執行機關':
+                content = remove_space(tr.find('td').text)
+                m_str = ur'.*機關代碼：(?P<id>[0-9\.]+).*機關名稱：(?P<name>.+)'
+                m = re.match(m_str, content)
+                if m is not None:
+                    returned_dic['fulfill_execution_org_id'] = \
+                        remove_space(m.group('id')) if m.group('id') is not None else content
+                    returned_dic['fulfill_execution_org_name'] = \
+                        remove_space(m.group('name')) if m.group('name') is not None else content
+
+    # Print returned_dic
+    if logging.getLogger().isEnabledFor(logging.DEBUG):
+        for k, v in returned_dic.iteritems():
+            logger.debug(u'{}\t{}'.format(k, v))
+
+    return returned_dic
+
+
 def parse_args():
     p = OptionParser()
     p.add_option('-d', '--directory', action='store',
@@ -342,13 +371,13 @@ if __name__ == '__main__':
         logger.error('No such directory: ' + directory)
         quit(_ERRCODE_DIR)
 
-    response_element = get_response_element(directory + '/' + 'with_committee_51759078_MOTC-IOT-104-IEB048.txt')
-    # response_element = get_response_element(directory + '/' + 'many_items_51772417_YL1041215P1.txt')
+    # response_element = get_response_element(directory + '/' + 'with_committee_51759078_MOTC-IOT-104-IEB048.txt')
+    response_element = get_response_element(directory + '/' + 'many_items_51772417_YL1041215P1.txt')
     # response_element = get_response_element(directory + '/' + '51744761_09.txt')
 
-    get_organization_info_dic(response_element)
-    get_procurement_info_dic(response_element)
+    # get_organization_info_dic(response_element)
+    # get_procurement_info_dic(response_element)
     get_tenderer_info_dic(response_element)
     get_tender_award_item_dic(response_element)
-    get_evaluation_committee_info_list(response_element)
-    get_award_info_dic(response_element)
+    # get_evaluation_committee_info_list(response_element)
+    # get_award_info_dic(response_element)
