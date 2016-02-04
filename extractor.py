@@ -205,15 +205,16 @@ def get_procurement_info_dic(element):
 def get_evaluation_committee_info_list(element):
     returned_list = []
     mat_venderargutd = element.find('td', {'id': 'mat_venderArguTd'})
-    committee = mat_venderargutd.findAll('td')
-    if len(committee) > 0 and len(committee) % 4 == 0:
-        for i in range(0, len(committee) / 4):
-            rec = [int(committee[i * 4].text.strip()),  # 項次
-                   yesno_conversion(committee[i * 4 + 1].text.strip()),  # 出席會議
-                   remove_space(committee[i * 4 + 2].text.strip()),  # 姓名
-                   remove_space(committee[i * 4 + 3].text.strip())  # 職業
-                   ]
-            returned_list.append(rec)
+    if mat_venderargutd is not None:
+        committee = mat_venderargutd.findAll('td')
+        if committee is not None and len(committee) > 0 and len(committee) % 4 == 0:
+            for i in range(0, len(committee) / 4):
+                rec = [int(committee[i * 4].text.strip()),  # 項次
+                       yesno_conversion(committee[i * 4 + 1].text.strip()),  # 出席會議
+                       remove_space(committee[i * 4 + 2].text.strip()),  # 姓名
+                       remove_space(committee[i * 4 + 3].text.strip())  # 職業
+                       ]
+                returned_list.append(rec)
 
     # Print returned_dic
     if logging.getLogger().isEnabledFor(logging.DEBUG):
@@ -345,9 +346,9 @@ if __name__ == '__main__':
     # response_element = get_response_element(directory + '/' + 'many_items_51772417_YL1041215P1.txt')
     # response_element = get_response_element(directory + '/' + '51744761_09.txt')
 
-    # get_organization_info_dic(response_element)
-    # get_procurement_info_dic(response_element)
-    # get_tenderer_info_dic(response_element)
-    # get_tender_award_item_dic(response_element)
+    get_organization_info_dic(response_element)
+    get_procurement_info_dic(response_element)
+    get_tenderer_info_dic(response_element)
+    get_tender_award_item_dic(response_element)
     get_evaluation_committee_info_list(response_element)
-    # get_award_info_dic(response_element)
+    get_award_info_dic(response_element)
