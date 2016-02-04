@@ -9,7 +9,7 @@ from optparse import OptionParser
 from bs4 import BeautifulSoup
 from datetime import datetime, date
 
-_ERRCODE_DIR = 4
+_ERRCODE_FILENAME = 3
 
 logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.DEBUG)
 logger = logging.getLogger(__name__)
@@ -131,10 +131,17 @@ tenderer_map = {
     '雇用員工總人數是否超過100人': ('is_employee_over_100', yesno_conversion)}
 
 tender_award_item_map = {
-    '得標廠商': 'awarded_tenderer',
-    '預估需求數量': 'request_number',
-    '決標金額': 'award_price',
-    '底價金額': 'base_price'}
+    # <tr class="award_table_tr_4">
+    '品項名稱': ('item_name', strip),
+    '單位': ('unit', remove_space),
+    '是否以單價及預估需求數量之乘積決定最低標': ('is_unit_price_x_qty_lowest', yesno_conversion),
+    '得標廠商': ('awarded_tenderer', strip),
+    '預估需求數量': ('request_number', int_conversion),
+    '決標金額': ('award_price', money_conversion),
+    '底價金額': ('base_price', money_conversion),
+    '原產地國別': ('source_country', strip),  # Special processing required
+    '原產地國別得標金額': ('source_award_price', money_conversion)  # Special processing required
+}
 
 evaluation_committee_info_map = {
     # <tr class="award_table_tr_4_1"> <td id="mat_venderArguTd">
@@ -225,8 +232,7 @@ def get_tenderer_info_dic(element):
         tb = tr.find('table')
         grp_num = 0
         if tb is not None:
-            row = tb.findAll('tr')
-            for r in row:
+            for r in tb.findAll('tr'):
                 th_name = remove_space(r.find('th').text.encode('utf-8'))
                 m = re.match(r'投標廠商(\d+)', th_name)
                 if m is not None:
@@ -259,37 +265,63 @@ def get_tenderer_info_dic(element):
 
 def get_tender_award_item_dic(element):
     returned_dic = {}
-    award_table_tr_4 = element.findAll('tr', {'class': 'award_table_tr_4'})
-    for tr in award_table_tr_4:
+    mapper = tender_award_item_map
+    award_table_tr = element.findAll('tr', {'class': 'award_table_tr_4'})
+    for tr in award_table_tr:
         tb = tr.find('table')
         if tb is not None:
-            row = tb.findAll('tr')
             item_num = 0
+            item_name = None
+            unit = None
+            is_upxql = None
             grp_num = 0
-            for r in row:
+            for r in tb.findAll('tr'):
                 if r.find('th') is not None:
-                    th = r.find('th').text
-                    # print r.find('th').text
-                    m = re.match(r'第(\d+)品項', th.encode('utf-8').strip())
-                    m2 = re.match(r'得標廠商(\d+)', th.encode('utf-8').strip())
+                    th_name = remove_space(r.find('th').text.encode('utf-8'))
+                    m = re.match(r'第(\d+)品項', th_name)
+                    m2 = re.match(r'得標廠商(\d+)', th_name)
                     if m is not None:
                         item_num = int(m.group(1).decode('utf-8'))
                         returned_dic[item_num] = {}
-                    elif m2 is not None:
+                    elif th_name == '品項名稱':
+                        content = r.find('td').text
+                        item_name = mapper[th_name][1](content) if len(mapper[th_name]) == 2 else content
+                    elif th_name == '單位':
+                        content = r.find('td').text
+                        unit = mapper[th_name][1](content) if len(mapper[th_name]) == 2 else content
+                    elif th_name == '是否以單價及預估需求數量之乘積決定最低標':
+                        content = r.find('td').text
+                        is_upxql = mapper[th_name][1](content) if len(mapper[th_name]) == 2 else content
+                    elif m2 is not None and item_num > 0:
                         grp_num = int(m2.group(1).decode('utf-8'))
-                        returned_dic[item_num][grp_num] = {}
-                    else:
-                        if th.encode('utf-8').strip() in tender_award_item_map:
-                            # print th.encode('utf-8').strip().decode('utf-8')
-                            if th.encode('utf-8').strip() == '決標金額' or th.encode('utf-8').strip() == '底價金額':
-                                m = re.match(r"\$?-?([0-9,]+)", "".join(r.find('td').text.split()))
-                                returned_dic[item_num][grp_num][
-                                    tender_award_item_map[th.encode('utf-8').strip()]] = int(
-                                    ''.join(m.group(0).split(',')))
+                        if grp_num > 0:
+                            returned_dic[item_num][grp_num] = {
+                                'item_name': item_name,
+                                'unit': unit,
+                                'is_unit_price_x_qty_lowest': is_upxql}
+                    elif item_num > 0 and grp_num > 0:
+                        if th_name in mapper and th_name != '原產地國別':
+                            key = mapper[th_name][0]
+                            content = r.find('td').text
+                            if len(mapper[th_name]) == 2:
+                                returned_dic[item_num][grp_num][key] = mapper[th_name][1](content)
                             else:
-                                returned_dic[item_num][grp_num][
-                                    tender_award_item_map[th.encode('utf-8').strip()]] = r.find(
-                                    'td').text.strip()
+                                returned_dic[item_num][grp_num][key] = content
+
+                        # Special case
+                        if th_name == '原產地國別':
+                            ctable = r.find('table')
+                            if ctable is not None:
+                                for row in ctable.findAll('tr'):
+                                    tds = row.findAll('td')
+                                    header = remove_space(tds[0].text.encode('utf-8'))
+                                    if header in mapper:
+                                        key = mapper[header][0]
+                                        content = tds[1].text
+                                        if len(mapper[header]) == 2:
+                                            returned_dic[item_num][grp_num][key] = mapper[header][1](content)
+                                        else:
+                                            returned_dic[item_num][grp_num][key] = content
 
     # Print returned_dic
     if logging.getLogger().isEnabledFor(logging.DEBUG):
@@ -358,26 +390,24 @@ def get_award_info_dic(element):
 
 def parse_args():
     p = OptionParser()
-    p.add_option('-d', '--directory', action='store',
-                 dest='directory', type='string', default='bid_detail')
+    p.add_option('-f', '--filename', action='store',
+                 dest='filename', type='string', default='')
     return p.parse_args()
 
 
 if __name__ == '__main__':
     options, remainder = parse_args()
 
-    directory = options.directory.strip()
-    if not os.path.isdir(directory):
-        logger.error('No such directory: ' + directory)
-        quit(_ERRCODE_DIR)
+    filename = options.filename.strip()
+    if not os.path.isfile(filename):
+        logger.error('File not found: ' + filename)
+        quit(_ERRCODE_FILENAME)
 
-    # response_element = get_response_element(directory + '/' + 'with_committee_51759078_MOTC-IOT-104-IEB048.txt')
-    response_element = get_response_element(directory + '/' + 'many_items_51772417_YL1041215P1.txt')
-    # response_element = get_response_element(directory + '/' + '51744761_09.txt')
+    response_element = get_response_element(filename)
 
-    # get_organization_info_dic(response_element)
-    # get_procurement_info_dic(response_element)
+    get_organization_info_dic(response_element)
+    get_procurement_info_dic(response_element)
     get_tenderer_info_dic(response_element)
     get_tender_award_item_dic(response_element)
-    # get_evaluation_committee_info_list(response_element)
-    # get_award_info_dic(response_element)
+    get_evaluation_committee_info_list(response_element)
+    get_award_info_dic(response_element)
