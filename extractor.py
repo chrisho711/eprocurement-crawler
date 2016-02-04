@@ -70,10 +70,10 @@ def phone_conversion(element):
 
 organization_info_map = {
     # award_table_tr_1
-    '機關代碼': ('id', remove_space),
+    '機關代碼': ('org_id', remove_space),
     '機關名稱': ('org_name', remove_space),
     '單位名稱': ('unit_name', remove_space),
-    '機關地址': ('address', remove_space),
+    '機關地址': ('org_address', remove_space),
     '聯絡人': ('contact', strip),
     '聯絡電話': ('phone', phone_conversion),
     '傳真號碼': ('fax', phone_conversion)}
@@ -82,7 +82,7 @@ procurement_info_map = {
     # award_table_tr_2
     '標案案號': ('job_number', remove_space),
     '招標方式': ('procurement_type', remove_space),
-    '決標方式': ('tender_awarding_type', remove_space),
+    '決標方式': ('awarding_type', remove_space),
     '是否依政府採購法施行細則第64條之2辦理': ('is_follow_law_64_2', yesno_conversion),
     '新增公告傳輸次數': ('num_transmit', int_conversion),
     '是否依據採購法第106條第1項第1款辦理': ('is_follow_law_106_1_1', yesno_conversion),
@@ -99,9 +99,9 @@ procurement_info_map = {
     '原公告日期': ('original_publication_date', date_conversion),
     '採購金額級距': ('procurement_money_amount_level', remove_space),
     '辦理方式': ('conduct_procurement', remove_space),
-    '是否適用WTO政府採購協定(GPA)：': ('is_gpa', yesno_conversion),
-    '是否適用臺紐經濟合作協定(ANZTEC)：': ('is_anztec', yesno_conversion),
-    '是否適用臺星經濟夥伴協定(ASTEP)：': ('is_astep', yesno_conversion),
+    '是否適用WTO政府採購協定(GPA)：': ('is_gpa',),  # Require special process
+    '是否適用臺紐經濟合作協定(ANZTEC)：': ('is_anztec',),  # Require special process
+    '是否適用臺星經濟夥伴協定(ASTEP)：': ('is_astep',),  # Require special process
     '預算金額是否公開': ('is_budget_amount_public', yesno_conversion),
     '預算金額': ('budget_amount', money_conversion),
     '是否受機關補助': ('is_org_subsidy', yesno_conversion),
@@ -112,24 +112,33 @@ procurement_info_map = {
     '本案採購契約是否採用主管機關訂定之範本': ('is_authorities_template', yesno_conversion),
     'pkAtmMain': ('pkAtmMain', strip)}
 
-award_info_map = {
-    # award_table_tr_6
-    '決標日期': ('tender_awarding_date', date_conversion),
-    '決標公告日期': ('tender_awarding_announce_date', date_conversion),
-    '底價金額': ('floor_price_value', money_conversion),
-    '總決標金額': ('total_tender_awarding_value', date_conversion)}
-
 tender_award_item_map = {
     '得標廠商': 'awarded_tenderer',
     '預估需求數量': 'request_number',
-    '決標金額': 'tender_awarding_value',
-    '底價金額': 'floor_price_value'}
+    '決標金額': 'awarding_value',
+    '底價金額': 'base_price'}
 
 tenderer_map = {
     '廠商代碼': 'tenderer_code',
     '廠商名稱': 'tenderer_name',
-    '是否得標': 'awarded',
+    '是否得標': 'is_awarded',
     '組織型態': 'organization_type'}
+
+award_info_map = {
+    # award_table_tr_6
+    '決標公告序號': ('award_announce_sn', remove_space),
+    '決標日期': ('awarding_date', date_conversion),
+    '決標公告日期': ('awarding_announce_date', date_conversion),
+    '是否刊登公報': ('is_post_bulletin', yesno_conversion),
+    '底價金額': ('base_price', money_conversion),
+    '底價金額是否公開': ('is_base_price_public', yesno_conversion),
+    '總決標金額': ('total_award_price', money_conversion),
+    '總決標金額是否公開': ('is_total_award_price_public', yesno_conversion),
+    '契約是否訂有依物價指數調整價金規定': ('is_price_dynamic_with_cpi', yesno_conversion),
+    '未列物價調整規定說明': ('no_price_dynamic_description', remove_space),
+    '履約執行機關代碼': ('fulfill_execution_org_id',),  # Require special process
+    '履約執行機關名稱': ('fulfill_execution_org_name',),  # Require special process
+    '附加說明': ('additional_info', strip)}
 
 
 def get_organization_info_dic(element):
@@ -200,6 +209,17 @@ def get_award_info_dic(element):
                 key = mapper[th_name][0]
                 content = tr.find('td').text
                 returned_dic[key] = mapper[th_name][1](content) if len(mapper[th_name]) == 2 else content
+
+            # Special case
+            if th_name == '履約執行機關':
+                content = remove_space(tr.find('td').text)
+                m_str = ur'.*機關代碼：(?P<id>[0-9\.]+).*機關名稱：(?P<name>.+)'
+                m = re.match(m_str, content)
+                if m is not None:
+                    returned_dic['fulfill_execution_org_id'] = \
+                        remove_space(m.group('id')) if m.group('id') is not None else content
+                    returned_dic['fulfill_execution_org_name'] = \
+                        remove_space(m.group('name')) if m.group('name') is not None else content
 
     # Print returned_dic
     if logging.getLogger().isEnabledFor(logging.DEBUG):
