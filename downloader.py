@@ -45,7 +45,7 @@ if __name__ == '__main__':
         for line in f.readlines():
             page_link = line.strip()
 
-            m = re.match(r'([^ ]+)pkAtmMain=(?P<pkAtmMain>\w+)&tenderCaseNo=(?P<tenderCaseNo>\w+)', page_link)
+            m = re.match(r'([^ ]+)pkAtmMain=(?P<pkAtmMain>\w+)&tenderCaseNo=(?P<tenderCaseNo>[\w\-]+)', page_link)
             pkAtmMain = m.group('pkAtmMain')
             tenderCaseNo = m.group('tenderCaseNo')
             filename = "%s_%s" % (pkAtmMain, tenderCaseNo)
