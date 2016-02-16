@@ -65,6 +65,8 @@ if __name__ == '__main__':
 
             with open('{}/{}.txt'.format(directory, filename), 'w') as bid_detail:
                 bid_detail.write(print_area.prettify("utf-8"))
+                bid_detail.write('<div class="pkAtmMain">' + pkAtmMain + '</div>')
+                bid_detail.write('<div class="tenderCaseNo">' + tenderCaseNo + '</div>')
                 logger.info('Writing bid detail (pkAtmMain: {}, tenderCaseNo: {})'.format(pkAtmMain, tenderCaseNo))
 
             time.sleep(random.randint(0, 2))  # Prevent from being treated as a DDOS attack
