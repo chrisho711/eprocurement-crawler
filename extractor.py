@@ -15,7 +15,7 @@ __version__ = "1.0.0b"
 
 _ERRCODE_FILENAME = 3
 
-logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.DEBUG)
+logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 pk_atm_main = None
