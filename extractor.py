@@ -18,14 +18,38 @@ _ERRCODE_FILENAME = 3
 logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
+pk_atm_main = None
+tender_case_no = None
+root_element = None
 
-def get_response_element(file_name):
+
+def get_root_element(file_name):
     f = open(file_name, 'r')
     response_text = f.read()
     f.close()
     soup = BeautifulSoup(''.join(response_text), 'lxml')
     tender_table = soup.find('table', {'class': 'table_block tender_table'})
     return tender_table
+
+
+def init(file_name):
+    global root_element
+    global pk_atm_main
+    global tender_case_no
+
+    f = open(file_name, 'r')
+    response_text = f.read()
+    f.close()
+    soup = BeautifulSoup(''.join(response_text), 'lxml')
+    pk_atm_main = soup.find('div', {'class': 'pkAtmMain'}).text
+    tender_case_no = soup.find('div', {'class': 'tenderCaseNo'}).text
+    root_element = soup.find('table', {'class': 'table_block tender_table'})
+    logger.debug('pkAtmMain: ' + pk_atm_main)
+    logger.debug('tenderCaseNo: ' + tender_case_no)
+
+
+def get_primary_key():
+    return pk_atm_main, tender_case_no
 
 
 def strip(element):
@@ -172,10 +196,13 @@ award_info_map = {
     '附加說明': ('additional_info', strip)}
 
 
-def get_organization_info_dic(element):
+def get_organization_info_dic():
+    if root_element is None:
+        return None
+
     returned_dic = {}
     mapper = organization_info_map
-    award_table_tr = element.findAll('tr', {'class': 'award_table_tr_1'})
+    award_table_tr = root_element.findAll('tr', {'class': 'award_table_tr_1'})
     for tr in award_table_tr:
         th = tr.find('th')
         if th is not None:
@@ -193,10 +220,13 @@ def get_organization_info_dic(element):
     return returned_dic
 
 
-def get_procurement_info_dic(element):
+def get_procurement_info_dic():
+    if root_element is None:
+        return None
+
     returned_dic = {}
     mapper = procurement_info_map
-    award_table_tr = element.findAll('tr', {'class': 'award_table_tr_2'})
+    award_table_tr = root_element.findAll('tr', {'class': 'award_table_tr_2'})
     for tr in award_table_tr:
         th = tr.find('th')
         if th is not None:
@@ -228,10 +258,13 @@ def get_procurement_info_dic(element):
     return returned_dic
 
 
-def get_tenderer_info_dic(element):
+def get_tenderer_info_dic():
+    if root_element is None:
+        return None
+
     returned_dic = {}
     mapper = tenderer_map
-    award_table_tr = element.findAll('tr', {'class': 'award_table_tr_3'})
+    award_table_tr = root_element.findAll('tr', {'class': 'award_table_tr_3'})
     for tr in award_table_tr:
         tb = tr.find('table')
         grp_num = 0
@@ -267,10 +300,13 @@ def get_tenderer_info_dic(element):
     return returned_dic
 
 
-def get_tender_award_item_dic(element):
+def get_tender_award_item_dic():
+    if root_element is None:
+        return None
+
     returned_dic = {}
     mapper = tender_award_item_map
-    award_table_tr = element.findAll('tr', {'class': 'award_table_tr_4'})
+    award_table_tr = root_element.findAll('tr', {'class': 'award_table_tr_4'})
     for tr in award_table_tr:
         tb = tr.find('table')
         if tb is not None:
@@ -337,10 +373,13 @@ def get_tender_award_item_dic(element):
     return returned_dic
 
 
-def get_evaluation_committee_info_list(element):
+def get_evaluation_committee_info_list():
+    if root_element is None:
+        return None
+
     returned_list = []
     mapper = evaluation_committee_info_map
-    mat_venderargutd = element.find('td', {'id': 'mat_venderArguTd'})
+    mat_venderargutd = root_element.find('td', {'id': 'mat_venderArguTd'})
     if mat_venderargutd is not None:
         committee = mat_venderargutd.findAll('td')
         if committee is not None and len(committee) > 0 and len(committee) % 4 == 0:
@@ -360,10 +399,13 @@ def get_evaluation_committee_info_list(element):
     return returned_list
 
 
-def get_award_info_dic(element):
+def get_award_info_dic():
+    if root_element is None:
+        return None
+
     returned_dic = {}
     mapper = award_info_map
-    award_table_tr = element.findAll('tr', {'class': 'award_table_tr_6'})
+    award_table_tr = root_element.findAll('tr', {'class': 'award_table_tr_6'})
     for tr in award_table_tr:
         th = tr.find('th')
         if th is not None:
@@ -402,16 +444,16 @@ def parse_args():
 if __name__ == '__main__':
     options, remainder = parse_args()
 
-    filename = options.filename.strip()
-    if not os.path.isfile(filename):
-        logger.error('File not found: ' + filename)
+    file_name = options.filename.strip()
+    if not os.path.isfile(file_name):
+        logger.error('File not found: ' + file_name)
         quit(_ERRCODE_FILENAME)
 
-    response_element = get_response_element(filename)
+    init(file_name)
 
-    get_organization_info_dic(response_element)
-    get_procurement_info_dic(response_element)
-    get_tenderer_info_dic(response_element)
-    get_tender_award_item_dic(response_element)
-    get_evaluation_committee_info_list(response_element)
-    get_award_info_dic(response_element)
+    get_organization_info_dic()
+    get_procurement_info_dic()
+    get_tenderer_info_dic()
+    get_tender_award_item_dic()
+    get_evaluation_committee_info_list()
+    get_award_info_dic()
