@@ -166,7 +166,10 @@ tender_map = {
     '是否為中小企業': ('is_sm_enterprise', yesno_conversion),
     '履約起日': ('fulfill_date_start', date_conversion),  # Special processing required
     '履約迄日': ('fulfill_date_end', date_conversion),  # Special processing required
-    '雇用員工總人數是否超過100人': ('is_employee_over_100', yesno_conversion)}
+    '雇用員工總人數是否超過100人': ('is_employee_over_100', yesno_conversion),
+    '僱用員工總人數': ('num_employee', int_conversion),
+    '已僱用原住民人數': ('num_aboriginal', int_conversion),
+    '已僱用身心障礙者人數': ('num_disability', int_conversion)}
 
 tender_award_item_map = {
     # <tr class="award_table_tr_4">
@@ -284,7 +287,7 @@ def get_tender_info_dic():
                 m = re.match(r'投標廠商(\d+)', th_name)
                 if m is not None:
                     grp_num = int(m.group(1))
-                    returned_dic[grp_num] = {'tenderer_num': grp_num}
+                    returned_dic[grp_num] = {'tender_sn': grp_num}
                 else:
                     if th_name in mapper:
                         key = mapper[th_name][0]
