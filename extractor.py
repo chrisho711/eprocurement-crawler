@@ -152,6 +152,7 @@ procurement_info_map = {
 
 tender_map = {
     # <tr class="award_table_tr_3">
+    '廠商流水號': ('tender_sn',),  # Special processing required
     '廠商代碼': ('tenderer_id', strip),
     '廠商名稱': ('tenderer_name', strip),
     '廠商名稱(英)': ('tenderer_name_eng', strip),
@@ -173,6 +174,8 @@ tender_map = {
 
 tender_award_item_map = {
     # <tr class="award_table_tr_4">
+    '品項流水號': ('item_sn',),  # Special processing required
+    '廠商流水號': ('tender_sn',),  # Special processing required
     '品項名稱': ('item_name', strip),
     '單位': ('unit', remove_space),
     '是否以單價及預估需求數量之乘積決定最低標': ('is_unit_price_x_qty_lowest', yesno_conversion),
@@ -341,17 +344,27 @@ def get_tender_award_item_dic():
                         item_name = mapper[th_name][1](content) if len(mapper[th_name]) == 2 else content
                     elif th_name == '單位':
                         content = r.find('td').text
-                        unit = mapper[th_name][1](content) if len(mapper[th_name]) == 2 else content
+                        if content is not None:
+                            unit = mapper[th_name][1](content) if len(mapper[th_name]) == 2 else content
+                        else:
+                            unit = None
                     elif th_name == '是否以單價及預估需求數量之乘積決定最低標':
                         content = r.find('td').text
-                        is_upxql = mapper[th_name][1](content) if len(mapper[th_name]) == 2 else content
+                        if content is not None:
+                            is_upxql = mapper[th_name][1](content) if len(mapper[th_name]) == 2 else content
+                        else:
+                            is_upxql = None
                     elif m2 is not None and item_num > 0:
                         grp_num = int(m2.group(1).decode('utf-8'))
                         if grp_num > 0:
                             returned_dic[item_num][grp_num] = {
-                                'item_name': item_name,
-                                'unit': unit,
-                                'is_unit_price_x_qty_lowest': is_upxql}
+                                'item_sn': item_num,
+                                'tender_sn': grp_num,
+                                'item_name': item_name}
+                            if unit is not None:
+                                returned_dic[item_num][grp_num]['unit'] = unit
+                            if is_upxql is not None:
+                                returned_dic[item_num][grp_num]['is_unit_price_x_qty_lowest'] = is_upxql
                     elif item_num > 0 and grp_num > 0:
                         if th_name in mapper and th_name != '原產地國別':
                             key = mapper[th_name][0]
