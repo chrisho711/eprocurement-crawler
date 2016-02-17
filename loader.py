@@ -88,7 +88,7 @@ def load(cnx, file_name):
     data.update(pk)
     cur.execute(gen_insert_sql('procurement_info', data))
 
-    data = et.get_tenderer_info_dic()
+    data = et.get_tender_info_dic()
     for tender_sn in data:
         data_tender = data[tender_sn]
         data_tender['tender_sn'] = tender_sn

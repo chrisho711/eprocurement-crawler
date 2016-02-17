@@ -150,7 +150,7 @@ procurement_info_map = {
     '歸屬計畫類別': ('project_type', remove_space),
     '本案採購契約是否採用主管機關訂定之範本': ('is_authorities_template', yesno_conversion)}
 
-tenderer_map = {
+tender_map = {
     # <tr class="award_table_tr_3">
     '廠商代碼': ('tenderer_id', strip),
     '廠商名稱': ('tenderer_name', strip),
@@ -268,12 +268,12 @@ def get_procurement_info_dic():
     return returned_dic
 
 
-def get_tenderer_info_dic():
+def get_tender_info_dic():
     if not is_init_ok:
         return None
 
     returned_dic = {}
-    mapper = tenderer_map
+    mapper = tender_map
     award_table_tr = root_element.findAll('tr', {'class': 'award_table_tr_3'})
     for tr in award_table_tr:
         tb = tr.find('table')
@@ -465,7 +465,7 @@ if __name__ == '__main__':
 
     get_organization_info_dic()
     get_procurement_info_dic()
-    get_tenderer_info_dic()
+    get_tender_info_dic()
     get_tender_award_item_dic()
     get_evaluation_committee_info_list()
     get_award_info_dic()
