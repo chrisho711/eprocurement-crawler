@@ -198,7 +198,9 @@ evaluation_committee_info_map = {
 award_info_map = {
     # <tr class="award_table_tr_6">
     '決標公告序號': ('award_announce_sn', remove_space),
+    '公告更正序號': ('revision_sn', remove_space),
     '決標日期': ('awarding_date', date_conversion),
+    '原決標公告日期': ('original_awarding_announce_date', date_conversion),
     '決標公告日期': ('awarding_announce_date', date_conversion),
     '是否刊登公報': ('is_post_bulletin', yesno_conversion),
     '底價金額': ('base_price', money_conversion),
@@ -468,7 +470,7 @@ def parse_args():
 
 
 if __name__ == '__main__':
-    logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.DEBUG)
+    logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
 
     options, remainder = parse_args()
 
