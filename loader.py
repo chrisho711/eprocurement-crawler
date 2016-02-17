@@ -45,26 +45,30 @@ def close_db():
 
 def gen_insert_sql(table, data_dict):
     sql_template = u'INSERT INTO {} ({}) VALUES ({}) ON DUPLICATE KEY UPDATE {}'
-    columns = ','.join(data_dict.keys())
+    columns = ''
     values = ''
     dup_update = ''
 
     for k, v in data_dict.iteritems():
-        if values != '':
-            values += ','
-            dup_update += ','
+        if v is not None:
+            if values != '':
+                columns += ','
+                values += ','
+                dup_update += ','
 
-        if isinstance(v, six.string_types):
-            vstr = '"' + v + '"'
-        elif isinstance(v, bool):
-            vstr = '1' if v else '0'
-        elif isinstance(v, datetime) or isinstance(v, date):
-            vstr = '"' + str(v) + '"'
-        else:
-            vstr = str(v)
+            columns += k
 
-        values += vstr
-        dup_update += k + '=' + vstr
+            if isinstance(v, six.string_types):
+                vstr = '"' + v + '"'
+            elif isinstance(v, bool):
+                vstr = '1' if v else '0'
+            elif isinstance(v, datetime) or isinstance(v, date):
+                vstr = '"' + str(v) + '"'
+            else:
+                vstr = str(v)
+
+            values += vstr
+            dup_update += k + '=' + vstr
 
     sql_str = sql_template.format(table, columns, values, dup_update)
     logger.debug(sql_str)
@@ -89,13 +93,16 @@ def load(cnx, file_name):
     cur.execute(gen_insert_sql('procurement_info', data))
 
     data = et.get_tender_info_dic()
-    for tender_sn in data:
-        data_tender = data[tender_sn]
-        data_tender['tender_sn'] = tender_sn
-        data_tender.update(pk)
-        cur.execute(gen_insert_sql('tender_info', data_tender))
+    for tender in data.values():
+        tender.update(pk)
+        cur.execute(gen_insert_sql('tender_info', tender))
 
-    et.get_tender_award_item_dic()
+    data = et.get_tender_award_item_dic()
+    for item in data.values():
+        for tender in item.values():
+            tender.update(pk)
+            cur.execute(gen_insert_sql('tender_award_item', tender))
+
     et.get_evaluation_committee_info_list()
     et.get_award_info_dic()
 
