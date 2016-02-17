@@ -25,9 +25,13 @@ logger = logging.getLogger(__name__)
 def parse_args():
     p = OptionParser()
     p.add_option('-s', '--date_start', action='store',
-                 dest='date_start', type='string', default='')
+                 dest='date_start', type='string', default=time.strftime('%Y%m%d'))
     p.add_option('-e', '--date_end', action='store',
-                 dest='date_end', type='string', default='')
+                 dest='date_end', type='string', default=time.strftime('%Y%m%d'))
+    p.add_option('-o', '--org_name', action='store',
+                 dest='org_name', type='string', default='')
+    p.add_option('-p', '--procurement_subject', action='store',
+                 dest='procurement_subject', type='string', default='')
     p.add_option('-f', '--list_filename', action='store',
                  dest='list_filename', type='string', default='bid_list.txt')
     return p.parse_args()
@@ -44,20 +48,29 @@ if __name__ == '__main__':
     options, remainder = parse_args()
 
     date_range = ('', '')
-    if options.date_start.strip() and options.date_end.strip():
-        try:
-            date_range = (dt.datetime.strptime(options.date_start.strip(), '%Y%m%d').date(),
-                          dt.datetime.strptime(options.date_end.strip(), '%Y%m%d').date())
-            if date_range[0] > date_range[1]:
-                logger.error('Start date must be smaller than or equal to end date.')
-                quit(_ERRCODE_DATE)
-        except ValueError:
-            logger.error('Invalid start/end date.')
+    try:
+        date_range = (dt.datetime.strptime(options.date_start.strip(), '%Y%m%d').date(),
+                      dt.datetime.strptime(options.date_end.strip(), '%Y%m%d').date())
+        if date_range[0] > date_range[1]:
+            logger.error('Start date must be smaller than or equal to end date.')
             quit(_ERRCODE_DATE)
+    except ValueError:
+        logger.error('Invalid start/end date.')
+        quit(_ERRCODE_DATE)
+
+    org_name = options.org_name.strip()
+    procurement_subject = options.procurement_subject.strip()
 
     logger.info('Start date: %s, End date: %s, List filename: %s',
                 date_range[0].strftime('%Y-%m-%d'), date_range[1].strftime('%Y-%m-%d'),
                 options.list_filename.strip())
+    logstr = ''
+    if org_name != '':
+        logstr = 'Organization name: %s', org_name
+    if procurement_subject != '':
+        logstr = 'Procurement subject: %s', procurement_subject
+    if logstr != '':
+        logger.info('Organization name: %s', org_name)
 
     with open(options.list_filename.strip(), 'w') as bid_file:
         # Limit maximum search date span to be within 3 months (consider Feb. can has only 28 days)
@@ -74,10 +87,10 @@ if __name__ == '__main__':
             payload = {'method': 'search',
                        'searchMethod': 'true',
                        'searchTarget': 'ATM',
-                       'orgName': '',
+                       'orgName': org_name,
                        'orgId': '',
                        'hid_1': '1',
-                       'tenderName': '',
+                       'tenderName': procurement_subject,
                        'tenderId': '',
                        'tenderStatus': '4,5,21,29',
                        'tenderWay': '',
