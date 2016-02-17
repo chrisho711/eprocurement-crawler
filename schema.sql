@@ -119,6 +119,6 @@ CREATE TABLE `award_info` (
   `no_price_dynamic_description` varchar(100) DEFAULT NULL COMMENT '未列物價調整規定說明',
   `fulfill_execution_org_id` varchar(45) DEFAULT NULL COMMENT '履約執行機關代碼',
   `fulfill_execution_org_name` varchar(100) DEFAULT NULL COMMENT '履約執行機關名稱',
-  `additional_info` varchar(200) DEFAULT NULL COMMENT '附加說明',
+  `additional_info` varchar(1000) DEFAULT NULL COMMENT '附加說明',
   PRIMARY KEY (`pk_atm_main`,`tender_case_no`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
