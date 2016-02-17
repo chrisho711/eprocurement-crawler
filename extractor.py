@@ -15,9 +15,9 @@ __version__ = "1.0.0b"
 
 _ERRCODE_FILENAME = 3
 
-logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+is_init_ok = False
 pk_atm_main = None
 tender_case_no = None
 root_element = None
@@ -33,6 +33,7 @@ def get_root_element(file_name):
 
 
 def init(file_name):
+    global is_init_ok
     global root_element
     global pk_atm_main
     global tender_case_no
@@ -46,10 +47,18 @@ def init(file_name):
     root_element = soup.find('table', {'class': 'table_block tender_table'})
     logger.debug('pkAtmMain: ' + pk_atm_main)
     logger.debug('tenderCaseNo: ' + tender_case_no)
+    if root_element is None or \
+                    pk_atm_main is None or tender_case_no is None or \
+                    pk_atm_main.strip() == '' or tender_case_no.strip() == '':
+        is_init_ok = False
+    else:
+        is_init_ok = True
+
+    return is_init_ok
 
 
 def get_primary_key():
-    return pk_atm_main, tender_case_no
+    return {'pk_atm_main': pk_atm_main, 'tender_case_no': tender_case_no}
 
 
 def strip(element):
@@ -108,11 +117,12 @@ organization_info_map = {
 
 procurement_info_map = {
     # <tr class="award_table_tr_2">
-    '標案案號': ('job_number', remove_space),
+    '標案案號': ('tender_case_no', remove_space),
     '招標方式': ('procurement_type', remove_space),
     '決標方式': ('awarding_type', remove_space),
     '是否依政府採購法施行細則第64條之2辦理': ('is_follow_law_64_2', yesno_conversion),
     '新增公告傳輸次數': ('num_transmit', int_conversion),
+    '公告更正序號': ('revision_sn', remove_space),
     '是否依據採購法第106條第1項第1款辦理': ('is_follow_law_106_1_1', yesno_conversion),
     '標案名稱': ('subject_of_procurement', remove_space),
     '決標資料類別': ('attr_of_awarding', remove_space),
@@ -127,6 +137,7 @@ procurement_info_map = {
     '原公告日期': ('original_publication_date', date_conversion),
     '採購金額級距': ('procurement_money_amount_level', remove_space),
     '辦理方式': ('conduct_procurement', remove_space),
+    '限制性招標依據之法條': ('restricted_tendering_law', remove_space),
     '是否適用WTO政府採購協定(GPA)：': ('is_gpa',),  # Special processing required
     '是否適用臺紐經濟合作協定(ANZTEC)：': ('is_anztec',),  # Special processing required
     '是否適用臺星經濟夥伴協定(ASTEP)：': ('is_astep',),  # Special processing required
@@ -137,8 +148,7 @@ procurement_info_map = {
     '履約地點（含地區）': ('fulfill_location_district', strip),
     '是否含特別預算': ('is_special_budget', yesno_conversion),
     '歸屬計畫類別': ('project_type', remove_space),
-    '本案採購契約是否採用主管機關訂定之範本': ('is_authorities_template', yesno_conversion),
-    'pkAtmMain': ('pkAtmMain', strip)}
+    '本案採購契約是否採用主管機關訂定之範本': ('is_authorities_template', yesno_conversion)}
 
 tenderer_map = {
     # <tr class="award_table_tr_3">
@@ -197,7 +207,7 @@ award_info_map = {
 
 
 def get_organization_info_dic():
-    if root_element is None:
+    if not is_init_ok:
         return None
 
     returned_dic = {}
@@ -221,7 +231,7 @@ def get_organization_info_dic():
 
 
 def get_procurement_info_dic():
-    if root_element is None:
+    if not is_init_ok:
         return None
 
     returned_dic = {}
@@ -259,7 +269,7 @@ def get_procurement_info_dic():
 
 
 def get_tenderer_info_dic():
-    if root_element is None:
+    if not is_init_ok:
         return None
 
     returned_dic = {}
@@ -301,7 +311,7 @@ def get_tenderer_info_dic():
 
 
 def get_tender_award_item_dic():
-    if root_element is None:
+    if not is_init_ok:
         return None
 
     returned_dic = {}
@@ -374,7 +384,7 @@ def get_tender_award_item_dic():
 
 
 def get_evaluation_committee_info_list():
-    if root_element is None:
+    if not is_init_ok:
         return None
 
     returned_list = []
@@ -400,7 +410,7 @@ def get_evaluation_committee_info_list():
 
 
 def get_award_info_dic():
-    if root_element is None:
+    if not is_init_ok:
         return None
 
     returned_dic = {}
@@ -442,6 +452,8 @@ def parse_args():
 
 
 if __name__ == '__main__':
+    logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.DEBUG)
+
     options, remainder = parse_args()
 
     file_name = options.filename.strip()
