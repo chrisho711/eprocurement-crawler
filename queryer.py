@@ -72,7 +72,7 @@ if __name__ == '__main__':
     if logstr != '':
         logger.info('Organization name: %s', org_name)
 
-    with open(options.list_filename.strip(), 'w') as bid_file:
+    with open(options.list_filename.strip(), 'w', encoding='utf-8') as bid_file:
         # Limit maximum search date span to be within 3 months (consider Feb. can has only 28 days)
         max_span = 89
         totalDays = (date_range[1] - date_range[0]).days

@@ -38,7 +38,7 @@ def init(file_name):
     global pk_atm_main
     global tender_case_no
 
-    f = open(file_name, 'r')
+    f = open(file_name, 'r', encoding='utf-8')
     response_text = f.read()
     f.close()
     soup = BeautifulSoup(''.join(response_text), 'lxml')
@@ -470,7 +470,7 @@ def parse_args():
 
 
 if __name__ == '__main__':
-    logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.DEBUG)
+    logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
 
     options, remainder = parse_args()
 

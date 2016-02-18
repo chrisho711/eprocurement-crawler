@@ -48,7 +48,7 @@ if __name__ == '__main__':
                 logger.error('Fail to create directory.')
                 quit(_ERRCODE_DIR)
 
-    with open(bid_list, 'r') as f:
+    with open(bid_list, 'r', encoding='utf-8') as f:
         for line in f.readlines():
             page_link = line.strip()
 
@@ -63,7 +63,7 @@ if __name__ == '__main__':
             soup = BeautifulSoup(''.join(response), 'lxml')
             print_area = soup.find('div', {"id": "printArea"})
 
-            with open('{}/{}.txt'.format(directory, filename), 'w') as bid_detail:
+            with open('{}/{}.txt'.format(directory, filename), 'w', encoding='utf-8') as bid_detail:
                 bid_detail.write(print_area.prettify())
                 bid_detail.write('<div class="pkAtmMain">' + pkAtmMain + '</div>')
                 bid_detail.write('<div class="tenderCaseNo">' + tenderCaseNo + '</div>')
