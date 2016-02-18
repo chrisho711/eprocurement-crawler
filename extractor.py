@@ -82,6 +82,10 @@ def int_conversion(element):
     return int(element.strip())
 
 
+def float_conversion(element):
+    return float(element.strip())
+
+
 def date_conversion(element):
     m = re.match(r'(?P<date>\d+/\d+/\d+)(\s+)*(?P<time>\d+:\d+)?', element.strip())
     if m is not None:
@@ -180,7 +184,7 @@ tender_award_item_map = {
     '單位': ('unit', remove_space),
     '是否以單價及預估需求數量之乘積決定最低標': ('is_unit_price_x_qty_lowest', yesno_conversion),
     '得標廠商': ('awarded_tenderer', strip),
-    '預估需求數量': ('request_number', int_conversion),
+    '預估需求數量': ('request_number', float_conversion),
     '決標金額': ('award_price', money_conversion),
     '底價金額': ('base_price', money_conversion),
     '原產地國別': ('source_country', strip),  # Special processing required

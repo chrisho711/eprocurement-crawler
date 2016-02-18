@@ -13,8 +13,17 @@ from optparse import OptionParser
 __author__ = "Yu-chun Huang"
 __version__ = "1.0.0b"
 
-logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
+logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.WARNING)
 logger = logging.getLogger(__name__)
+
+trantab = str.maketrans(
+    {'\'': '\\\'',
+     '\"': '\\\"',
+     '\b': '\\b',
+     '\n': '\\n',
+     '\r': '\\r',
+     '\t': '\\t',
+     '\\': '\\\\',})
 
 
 def gen_insert_sql(table, data_dict):
@@ -33,11 +42,11 @@ def gen_insert_sql(table, data_dict):
             columns += k
 
             if isinstance(v, str):
-                vstr = '"' + v + '"'
+                vstr = '\'' + v.translate(trantab) + '\''
             elif isinstance(v, bool):
                 vstr = '1' if v else '0'
             elif isinstance(v, datetime) or isinstance(v, date):
-                vstr = '"' + str(v) + '"'
+                vstr = '\'' + str(v) + '\''
             else:
                 vstr = str(v)
 
@@ -130,6 +139,7 @@ if __name__ == '__main__':
                  }
     try:
         db_connection = mysql.connector.connect(**db_config)
+        db_connection.autocommit = False
 
         f = options.filename.strip()
         if f != '':
