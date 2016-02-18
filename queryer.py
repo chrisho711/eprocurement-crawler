@@ -4,11 +4,11 @@
 Modified from the source code provided by https://github.com/ywchiu/pythonetl"""
 
 import requests
-import urlparse
 import logging
 import time
 import random
 import datetime as dt
+from urllib import parse
 from optparse import OptionParser
 from bs4 import BeautifulSoup
 from math import ceil
@@ -76,7 +76,7 @@ if __name__ == '__main__':
         # Limit maximum search date span to be within 3 months (consider Feb. can has only 28 days)
         max_span = 89
         totalDays = (date_range[1] - date_range[0]).days
-        for i in range(0, totalDays / max_span + 1):
+        for i in range(0, int(totalDays / max_span) + 1):
             s_date = date_range[0] + dt.timedelta(days=i * (max_span - 1) + i)
             e_date = min(date_range[1], s_date + dt.timedelta(days=max_span - 1))
 
@@ -143,10 +143,10 @@ if __name__ == '__main__':
                 bid_rows = bid_table.findAll('tr')[1:-1]
                 for bid_row in bid_rows:
                     link = [tag['href'] for tag in bid_row.findAll('a', {'href': True})][0]
-                    link_href = urlparse.urljoin('http://web.pcc.gov.tw/tps/pss/tender.do?'
-                                                 'searchMode=common&'
-                                                 'searchType=advance',
-                                                 link)
+                    link_href = parse.urljoin('http://web.pcc.gov.tw/tps/pss/tender.do?'
+                                              'searchMode=common&'
+                                              'searchType=advance',
+                                              link)
                     bid_file.write(link_href + '\n')
                 bid_file.flush()
                 time.sleep(random.randint(0, 2))  # Prevent from being treated as a DDOS attack

@@ -4,7 +4,6 @@
 
 import os
 import logging
-import six
 import mysql.connector
 import extractor as et
 from datetime import datetime, date
@@ -24,7 +23,7 @@ def gen_insert_sql(table, data_dict):
     values = ''
     dup_update = ''
 
-    for k, v in data_dict.iteritems():
+    for k, v in data_dict.items():
         if v is not None:
             if values != '':
                 columns += ','
@@ -33,7 +32,7 @@ def gen_insert_sql(table, data_dict):
 
             columns += k
 
-            if isinstance(v, six.string_types):
+            if isinstance(v, str):
                 vstr = '"' + v + '"'
             elif isinstance(v, bool):
                 vstr = '1' if v else '0'

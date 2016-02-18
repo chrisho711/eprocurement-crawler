@@ -74,7 +74,7 @@ def unescape_conversion(element):
 
 
 def yesno_conversion(element):
-    m = re.match(ur'.*是.*', element.strip())
+    m = re.match(r'.*是.*', element.strip())
     return m is not None
 
 
@@ -224,7 +224,7 @@ def get_organization_info_dic():
     for tr in award_table_tr:
         th = tr.find('th')
         if th is not None:
-            th_name = remove_space(th.text.encode('utf-8'))
+            th_name = remove_space(th.text)
             if th_name in mapper:
                 key = mapper[th_name][0]
                 content = tr.find('td').text
@@ -232,8 +232,8 @@ def get_organization_info_dic():
 
     # Print returned_dic
     if logging.getLogger().isEnabledFor(logging.DEBUG):
-        for k, v in returned_dic.iteritems():
-            logger.debug(u'{}\t{}'.format(k, v))
+        for k, v in returned_dic.items():
+            logger.debug('{}\t{}'.format(k, v))
 
     return returned_dic
 
@@ -248,7 +248,7 @@ def get_procurement_info_dic():
     for tr in award_table_tr:
         th = tr.find('th')
         if th is not None:
-            th_name = remove_space(th.text.encode('utf-8'))
+            th_name = remove_space(th.text)
             if th_name in mapper:
                 key = mapper[th_name][0]
                 content = tr.find('td').text
@@ -258,7 +258,7 @@ def get_procurement_info_dic():
             # Special case
             if th_name == '是否適用條約或協定之採購':
                 content = remove_space(tr.find('td').text)
-                m_str = ur'.*\(GPA\)：(?P<gpa>[是否]).*\(ANZTEC\)：(?P<anztec>[是否]).*\(ASTEP\)：(?P<astep>[是否]).*'
+                m_str = r'.*\(GPA\)：(?P<gpa>[是否]).*\(ANZTEC\)：(?P<anztec>[是否]).*\(ASTEP\)：(?P<astep>[是否]).*'
                 m = re.match(m_str, content)
                 if m is not None:
                     returned_dic['is_gpa'] = \
@@ -270,8 +270,8 @@ def get_procurement_info_dic():
 
     # Print returned_dic
     if logging.getLogger().isEnabledFor(logging.DEBUG):
-        for k, v in returned_dic.iteritems():
-            logger.debug(u'{}\t{}'.format(k, v))
+        for k, v in returned_dic.items():
+            logger.debug('{}\t{}'.format(k, v))
 
     return returned_dic
 
@@ -288,7 +288,7 @@ def get_tender_info_dic():
         grp_num = 0
         if tb is not None:
             for r in tb.findAll('tr'):
-                th_name = remove_space(r.find('th').text.encode('utf-8'))
+                th_name = remove_space(r.find('th').text)
                 m = re.match(r'投標廠商(\d+)', th_name)
                 if m is not None:
                     grp_num = int(m.group(1))
@@ -304,7 +304,7 @@ def get_tender_info_dic():
 
                     # Special case
                     if th_name == '履約起迄日期':
-                        content = remove_space(r.find('td').text.encode('utf-8'))
+                        content = remove_space(r.find('td').text)
                         date_range = content.split('－')
                         returned_dic[grp_num]['fulfill_date_start'] = date_conversion(date_range[0])
                         returned_dic[grp_num]['fulfill_date_end'] = date_conversion(date_range[1])
@@ -312,8 +312,8 @@ def get_tender_info_dic():
     # Print returned_dic
     if logging.getLogger().isEnabledFor(logging.DEBUG):
         for grp_num in returned_dic:
-            for k, v in returned_dic[grp_num].iteritems():
-                logger.debug(u'{}\t{}\t{}'.format(grp_num, k, v))
+            for k, v in returned_dic[grp_num].items():
+                logger.debug('{}\t{}\t{}'.format(grp_num, k, v))
 
     return returned_dic
 
@@ -335,11 +335,11 @@ def get_tender_award_item_dic():
             grp_num = 0
             for r in tb.findAll('tr'):
                 if r.find('th') is not None:
-                    th_name = remove_space(r.find('th').text.encode('utf-8'))
+                    th_name = remove_space(r.find('th').text)
                     m = re.match(r'第(\d+)品項', th_name)
                     m2 = re.match(r'得標廠商(\d+)', th_name)
                     if m is not None:
-                        item_num = int(m.group(1).decode('utf-8'))
+                        item_num = int(m.group(1))
                         returned_dic[item_num] = {}
                     elif th_name == '品項名稱':
                         content = r.find('td').text
@@ -357,7 +357,7 @@ def get_tender_award_item_dic():
                         else:
                             is_upxql = None
                     elif m2 is not None and item_num > 0:
-                        grp_num = int(m2.group(1).decode('utf-8'))
+                        grp_num = int(m2.group(1))
                         if grp_num > 0:
                             returned_dic[item_num][grp_num] = {
                                 'item_sn': item_num,
@@ -382,7 +382,7 @@ def get_tender_award_item_dic():
                             if ctable is not None:
                                 for row in ctable.findAll('tr'):
                                     tds = row.findAll('td')
-                                    header = remove_space(tds[0].text.encode('utf-8'))
+                                    header = remove_space(tds[0].text)
                                     if header in mapper:
                                         key = mapper[header][0]
                                         content = tds[1].text
@@ -393,10 +393,10 @@ def get_tender_award_item_dic():
 
     # Print returned_dic
     if logging.getLogger().isEnabledFor(logging.DEBUG):
-        for item_k, item_v in returned_dic.iteritems():
-            for tender_k, tender_v in item_v.iteritems():
-                for detail_k, detail_v in tender_v.iteritems():
-                    logger.debug(u'Item: {}, tender: {}, {}\t{}'.format(item_k, tender_k, detail_k, detail_v))
+        for item_k, item_v in returned_dic.items():
+            for tender_k, tender_v in item_v.items():
+                for detail_k, detail_v in tender_v.items():
+                    logger.debug('Item: {}, tender: {}, {}\t{}'.format(item_k, tender_k, detail_k, detail_v))
 
     return returned_dic
 
@@ -411,7 +411,7 @@ def get_evaluation_committee_info_list():
     if mat_venderargutd is not None:
         committee = mat_venderargutd.findAll('td')
         if committee is not None and len(committee) > 0 and len(committee) % 4 == 0:
-            for i in range(0, len(committee) / 4):
+            for i in range(0, int(len(committee) / 4)):
                 rec = {mapper['項次'][0]: int(committee[i * 4].text.strip()),
                        mapper['出席會議'][0]: yesno_conversion(committee[i * 4 + 1].text.strip()),
                        mapper['姓名'][0]: remove_space(committee[i * 4 + 2].text.strip()),
@@ -421,8 +421,8 @@ def get_evaluation_committee_info_list():
     # Print returned_dic
     if logging.getLogger().isEnabledFor(logging.DEBUG):
         for c in returned_list:
-            for k, v in c.iteritems():
-                logger.debug(u'{}\t{}'.format(k, v))
+            for k, v in c.items():
+                logger.debug('{}\t{}'.format(k, v))
 
     return returned_list
 
@@ -437,7 +437,7 @@ def get_award_info_dic():
     for tr in award_table_tr:
         th = tr.find('th')
         if th is not None:
-            th_name = remove_space(th.text.encode('utf-8'))
+            th_name = remove_space(th.text)
             if th_name in mapper:
                 key = mapper[th_name][0]
                 content = tr.find('td').text
@@ -446,7 +446,7 @@ def get_award_info_dic():
             # Special case
             if th_name == '履約執行機關':
                 content = remove_space(tr.find('td').text)
-                m_str = ur'.*機關代碼：(?P<id>[0-9\.]+).*機關名稱：(?P<name>.+)'
+                m_str = r'.*機關代碼：(?P<id>[0-9\.]+).*機關名稱：(?P<name>.+)'
                 m = re.match(m_str, content)
                 if m is not None:
                     returned_dic['fulfill_execution_org_id'] = \
@@ -456,8 +456,8 @@ def get_award_info_dic():
 
     # Print returned_dic
     if logging.getLogger().isEnabledFor(logging.DEBUG):
-        for k, v in returned_dic.iteritems():
-            logger.debug(u'{}\t{}'.format(k, v))
+        for k, v in returned_dic.items():
+            logger.debug('{}\t{}'.format(k, v))
 
     return returned_dic
 
@@ -470,7 +470,7 @@ def parse_args():
 
 
 if __name__ == '__main__':
-    logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
+    logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.DEBUG)
 
     options, remainder = parse_args()
 

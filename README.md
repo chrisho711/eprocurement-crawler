@@ -1,5 +1,8 @@
 # eprocurement-crawler
 Crawler for Taiwan government e-procurement website (http://web.pcc.gov.tw)
 
+# Interpreter
+Python 3
+
 # Dependency
-requests, urlparse, optparse, bs4, six, mysql-connector-python
+requests, lxml, beautifulsoup4, mysql-connector-python-rf

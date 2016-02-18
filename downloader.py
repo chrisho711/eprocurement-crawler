@@ -58,13 +58,13 @@ if __name__ == '__main__':
             filename = "%s_%s" % (pkAtmMain, tenderCaseNo)
 
             request_get = requests.get(page_link)
-            response = request_get.text.encode('utf8')
+            response = request_get.text
 
             soup = BeautifulSoup(''.join(response), 'lxml')
             print_area = soup.find('div', {"id": "printArea"})
 
             with open('{}/{}.txt'.format(directory, filename), 'w') as bid_detail:
-                bid_detail.write(print_area.prettify("utf-8"))
+                bid_detail.write(print_area.prettify())
                 bid_detail.write('<div class="pkAtmMain">' + pkAtmMain + '</div>')
                 bid_detail.write('<div class="tenderCaseNo">' + tenderCaseNo + '</div>')
                 logger.info('Writing bid detail (pkAtmMain: {}, tenderCaseNo: {})'.format(pkAtmMain, tenderCaseNo))
