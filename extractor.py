@@ -17,11 +17,6 @@ _ERRCODE_FILENAME = 3
 
 logger = logging.getLogger(__name__)
 
-is_init_ok = False
-pk_atm_main = None
-tender_case_no = None
-root_element = None
-
 
 def get_root_element(file_name):
     f = open(file_name, 'r')
@@ -32,13 +27,8 @@ def get_root_element(file_name):
     return tender_table
 
 
-def init(file_name):
-    global is_init_ok
-    global root_element
-    global pk_atm_main
-    global tender_case_no
-
-    f = open(file_name, 'r', encoding='utf-8')
+def init(filename):
+    f = open(filename, 'r', encoding='utf-8')
     response_text = f.read()
     f.close()
     soup = BeautifulSoup(''.join(response_text), 'lxml')
@@ -47,18 +37,8 @@ def init(file_name):
     root_element = soup.find('table', {'class': 'table_block tender_table'})
     logger.debug('pkAtmMain: ' + pk_atm_main)
     logger.debug('tenderCaseNo: ' + tender_case_no)
-    if root_element is None or \
-                    pk_atm_main is None or tender_case_no is None or \
-                    pk_atm_main.strip() == '' or tender_case_no.strip() == '':
-        is_init_ok = False
-    else:
-        is_init_ok = True
 
-    return is_init_ok
-
-
-def get_primary_key():
-    return {'pk_atm_main': pk_atm_main, 'tender_case_no': tender_case_no}
+    return pk_atm_main, tender_case_no, root_element
 
 
 def strip(element):
@@ -218,8 +198,8 @@ award_info_map = {
     '附加說明': ('additional_info', strip)}
 
 
-def get_organization_info_dic():
-    if not is_init_ok:
+def get_organization_info_dic(root_element):
+    if root_element is None:
         return None
 
     returned_dic = {}
@@ -242,8 +222,8 @@ def get_organization_info_dic():
     return returned_dic
 
 
-def get_procurement_info_dic():
-    if not is_init_ok:
+def get_procurement_info_dic(root_element):
+    if root_element is None:
         return None
 
     returned_dic = {}
@@ -280,8 +260,8 @@ def get_procurement_info_dic():
     return returned_dic
 
 
-def get_tender_info_dic():
-    if not is_init_ok:
+def get_tender_info_dic(root_element):
+    if root_element is None:
         return None
 
     returned_dic = {}
@@ -322,8 +302,8 @@ def get_tender_info_dic():
     return returned_dic
 
 
-def get_tender_award_item_dic():
-    if not is_init_ok:
+def get_tender_award_item_dic(root_element):
+    if root_element is None:
         return None
 
     returned_dic = {}
@@ -405,8 +385,8 @@ def get_tender_award_item_dic():
     return returned_dic
 
 
-def get_evaluation_committee_info_list():
-    if not is_init_ok:
+def get_evaluation_committee_info_list(root_element):
+    if root_element is None:
         return None
 
     returned_list = []
@@ -431,8 +411,8 @@ def get_evaluation_committee_info_list():
     return returned_list
 
 
-def get_award_info_dic():
-    if not is_init_ok:
+def get_award_info_dic(root_element):
+    if root_element is None:
         return None
 
     returned_dic = {}
@@ -483,11 +463,11 @@ if __name__ == '__main__':
         logger.error('File not found: ' + file_name)
         quit(_ERRCODE_FILENAME)
 
-    init(file_name)
+    pk_pk_atm_main, tender_case_no, root_element = init(file_name)
 
-    get_organization_info_dic()
-    get_procurement_info_dic()
-    get_tender_info_dic()
-    get_tender_award_item_dic()
-    get_evaluation_committee_info_list()
-    get_award_info_dic()
+    get_organization_info_dic(root_element)
+    get_procurement_info_dic(root_element)
+    get_tender_info_dic(root_element)
+    get_tender_award_item_dic(root_element)
+    get_evaluation_committee_info_list(root_element)
+    get_award_info_dic(root_element)

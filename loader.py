@@ -13,7 +13,7 @@ from optparse import OptionParser
 __author__ = "Yu-chun Huang"
 __version__ = "1.0.0b"
 
-logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.WARNING)
+logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 trantab = str.maketrans(
@@ -59,48 +59,51 @@ def gen_insert_sql(table, data_dict):
 
 
 def load(cnx, file_name):
-    if not et.init(file_name):
+    pk_atm_main, tender_case_no, root_element = et.init(file_name)
+    if root_element is None \
+            or pk_atm_main is None or tender_case_no is None \
+            or pk_atm_main == '' or tender_case_no == '':
         logger.error('Fail to extract data from file: ' + file_name)
         return
 
-    pk = et.get_primary_key()
-    logger.info('Updating database (pkAtmMain: {}, tenderCaseNo: {})'.format(pk['pk_atm_main'], pk['tender_case_no']))
+    pk = {'pk_atm_main': pk_atm_main, 'tender_case_no': tender_case_no}
+    logger.info('Updating database (pkAtmMain: {}, tenderCaseNo: {})'.format(pk_atm_main, tender_case_no))
 
     try:
         cur = cnx.cursor(buffered=True)
 
-        data = et.get_organization_info_dic()
+        data = et.get_organization_info_dic(root_element)
         data.update(pk)
         cur.execute(gen_insert_sql('organization_info', data))
 
-        data = et.get_procurement_info_dic()
+        data = et.get_procurement_info_dic(root_element)
         data.update(pk)
         cur.execute(gen_insert_sql('procurement_info', data))
 
-        data = et.get_tender_info_dic()
+        data = et.get_tender_info_dic(root_element)
         for tender in data.values():
             tender.update(pk)
             cur.execute(gen_insert_sql('tender_info', tender))
 
-        data = et.get_tender_award_item_dic()
+        data = et.get_tender_award_item_dic(root_element)
         for item in data.values():
             for tender in item.values():
                 tender.update(pk)
                 cur.execute(gen_insert_sql('tender_award_item', tender))
 
-        data = et.get_evaluation_committee_info_list()
+        data = et.get_evaluation_committee_info_list(root_element)
         for committee in data:
             committee.update(pk)
             cur.execute(gen_insert_sql('evaluation_committee_info', committee))
 
-        data = et.get_award_info_dic()
+        data = et.get_award_info_dic(root_element)
         data.update(pk)
         cur.execute(gen_insert_sql('award_info', data))
 
         cnx.commit()
     except mysql.connector.Error as err:
-        logger.warn('Fail to update database (pkAtmMain: {}, tenderCaseNo: {})\n\t{}'.format(pk['pk_atm_main'],
-                                                                                             pk['tender_case_no'],
+        logger.warn('Fail to update database (pkAtmMain: {}, tenderCaseNo: {})\n\t{}'.format(pk_atm_main,
+                                                                                             tender_case_no,
                                                                                              err))
 
 
