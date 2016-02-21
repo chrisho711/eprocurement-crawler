@@ -53,6 +53,9 @@ if __name__ == '__main__':
             page_link = line.strip()
 
             m = re.match(r'([^ ]+)pkAtmMain=(?P<pkAtmMain>\w+)&tenderCaseNo=(?P<tenderCaseNo>[\w\-]+)', page_link)
+            if m is None:
+                continue
+
             pkAtmMain = m.group('pkAtmMain')
             tenderCaseNo = m.group('tenderCaseNo')
             if pkAtmMain is None or tenderCaseNo is None:
