@@ -55,6 +55,9 @@ if __name__ == '__main__':
             m = re.match(r'([^ ]+)pkAtmMain=(?P<pkAtmMain>\w+)&tenderCaseNo=(?P<tenderCaseNo>[\w\-]+)', page_link)
             pkAtmMain = m.group('pkAtmMain')
             tenderCaseNo = m.group('tenderCaseNo')
+            if pkAtmMain is None or tenderCaseNo is None:
+                continue
+
             filename = "%s_%s" % (pkAtmMain, tenderCaseNo)
 
             request_get = requests.get(page_link)
