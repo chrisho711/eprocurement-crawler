@@ -59,11 +59,13 @@ def yesno_conversion(element):
 
 
 def int_conversion(element):
-    return int(element.strip())
+    m = re.match(r'\$?-?([0-9,\.]+)', ''.join(element.split()))
+    return int(''.join(m.group(0).split(',')))
 
 
 def float_conversion(element):
-    return float(element.strip())
+    m = re.match(r'\$?-?([0-9,\.]+)', ''.join(element.split()))
+    return float(''.join(m.group(0).split(',')))
 
 
 def date_conversion(element):
