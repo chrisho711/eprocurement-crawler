@@ -63,16 +63,21 @@ if __name__ == '__main__':
 
             filename = "%s_%s" % (pkAtmMain, tenderCaseNo)
 
-            request_get = requests.get(page_link)
-            response = request_get.text
+            try:
+                request_get = requests.get(page_link)
+                response = request_get.text
 
-            soup = BeautifulSoup(''.join(response), 'lxml')
-            print_area = soup.find('div', {"id": "printArea"})
+                soup = BeautifulSoup(''.join(response), 'lxml')
+                print_area = soup.find('div', {"id": "printArea"})
 
-            with open('{}/{}.txt'.format(directory, filename), 'w', encoding='utf-8') as bid_detail:
-                bid_detail.write(print_area.prettify())
-                bid_detail.write('<div class="pkAtmMain">' + pkAtmMain + '</div>')
-                bid_detail.write('<div class="tenderCaseNo">' + tenderCaseNo + '</div>')
-                logger.info('Writing bid detail (pkAtmMain: {}, tenderCaseNo: {})'.format(pkAtmMain, tenderCaseNo))
+                with open('{}/{}.txt'.format(directory, filename), 'w', encoding='utf-8') as bid_detail:
+                    bid_detail.write(print_area.prettify())
+                    bid_detail.write('<div class="pkAtmMain">' + pkAtmMain + '</div>\n')
+                    bid_detail.write('<div class="tenderCaseNo">' + tenderCaseNo + '</div>')
+                    logger.info('Writing bid detail (pkAtmMain: {}, tenderCaseNo: {})'.format(pkAtmMain, tenderCaseNo))
+            except:
+                with open(options.list_filename.strip() + 'download.err', 'a', encoding='utf-8') as err_file:
+                    err_file.write(page_link + '\n')
+                continue
 
-            time.sleep(random.randint(0, 2))  # Prevent from being treated as a DDOS attack
+            time.sleep(1)  # Prevent from being treated as a DDOS attack
