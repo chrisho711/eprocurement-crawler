@@ -87,8 +87,15 @@ def money_conversion(element):
 
 
 def tel_conversion(element):
-    m = re.match(r'(\((?P<area>\d+)\))?\s*(?P<number>\d+)', element.strip())
-    return m.group('area') + '-' + m.group('number') if m.group('area') is not None else m.group('number')
+    m = re.match(r'(\((?P<area>\d+)\))?\s*(?P<number>\**\d*\**)(\s*分機\s*(?P<extension>\**\d*\**))?', element.strip())
+    outstr = ''
+    if m.group('area') is not None:
+        outstr += m.group('area') + '-'
+    if m.group('number') is not None:
+        outstr += m.group('number')
+    if m.group('extension') is not None:
+        outstr += ' ext ' + m.group('extension')
+    return outstr
 
 
 organization_info_map = {
@@ -274,7 +281,10 @@ def get_tender_info_dic(root_element):
         grp_num = 0
         if tb is not None:
             for r in tb.findAll('tr'):
-                th_name = remove_space(r.find('th').text)
+                th_find = r.find('th')
+                if th_find is None:
+                    continue
+                th_name = remove_space(th_find.text)
                 m = re.match(r'投標廠商(\d+)', th_name)
                 if m is not None:
                     grp_num = int(m.group(1))
