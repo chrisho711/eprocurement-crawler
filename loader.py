@@ -13,7 +13,7 @@ from optparse import OptionParser
 __author__ = "Yu-chun Huang"
 __version__ = "1.0.0b"
 
-logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.WARN)
+logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 trantab = str.maketrans(
