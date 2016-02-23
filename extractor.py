@@ -432,7 +432,7 @@ def get_award_info_dic(root_element):
             # Special case
             if th_name == '履約執行機關':
                 content = remove_space(tr.find('td').text)
-                m_str = r'.*機關代碼：(?P<id>[0-9\.]+).*機關名稱：(?P<name>.+)'
+                m_str = r'.*機關代碼：(?P<id>[a-zA-Z0-9\.]+).*機關名稱：(?P<name>.+)'
                 m = re.match(m_str, content)
                 if m is not None:
                     returned_dic['fulfill_execution_org_id'] = \
