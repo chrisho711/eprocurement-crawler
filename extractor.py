@@ -59,12 +59,12 @@ def yesno_conversion(element):
 
 
 def int_conversion(element):
-    m = re.match(r'\$?-?([0-9,\.]+)', ''.join(element.split()))
+    m = re.match(r'-?([\d,\.]+)', ''.join(element.split()))
     return int(''.join(m.group(0).split(',')))
 
 
 def float_conversion(element):
-    m = re.match(r'\$?-?([0-9,\.]+)', ''.join(element.split()))
+    m = re.match(r'-?([\d,\.]+)', ''.join(element.split()))
     return float(''.join(m.group(0).split(',')))
 
 
@@ -82,7 +82,7 @@ def date_conversion(element):
 
 
 def money_conversion(element):
-    m = re.match(r'\$?-?([0-9,]+)', ''.join(element.split()))
+    m = re.match(r'\$?-?([\d,\.]+)', ''.join(element.split()))
     return int(''.join(m.group(0).split(',')))
 
 
