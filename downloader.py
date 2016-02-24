@@ -76,7 +76,7 @@ if __name__ == '__main__':
                     bid_detail.write('<div class="tenderCaseNo">' + tenderCaseNo + '</div>')
                     logger.info('Writing bid detail (pkAtmMain: {}, tenderCaseNo: {})'.format(pkAtmMain, tenderCaseNo))
             except:
-                with open(options.list_filename.strip() + 'download.err', 'a', encoding='utf-8') as err_file:
+                with open(options.list_filename.strip() + '.download.err', 'a', encoding='utf-8') as err_file:
                     err_file.write(page_link + '\n')
                 continue
 

@@ -143,7 +143,7 @@ if __name__ == '__main__':
                         bid_file.write(link_href + '\n')
                     bid_file.flush()
                 except:
-                    with open(options.list_filename.strip() + 'page.err', 'a', encoding='utf-8') as err_file:
+                    with open(options.list_filename.strip() + '.page.err', 'a', encoding='utf-8') as err_file:
                         err_file.write(page_format % page + '\n')
                     continue
 
