@@ -129,6 +129,8 @@ def parse_args():
                  dest='host', type='string', default='')
     p.add_option('-b', '--database', action='store',
                  dest='database', type='string', default='')
+    p.add_option('-o', '--port', action='store',
+                 dest='port', type='string', default='3306')
     return p.parse_args()
 
 
@@ -138,16 +140,19 @@ if __name__ == '__main__':
     user = options.user.strip()
     password = options.password.strip()
     host = options.host.strip()
+    port = options.port.strip()
     database = options.database.strip()
-    if user == '' or password == '' or host == '' or database == '':
+    if user == '' or password == '' or host == '' or port == '' or database == '':
         logger.error('Database connection information is incomplete.')
         quit()
 
     db_config = {'user': user,
                  'password': password,
                  'host': host,
+                 'port': port,
                  'database': database
                  }
+
     try:
         db_connection = mysql.connector.connect(**db_config)
         db_connection.autocommit = False
