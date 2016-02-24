@@ -60,8 +60,8 @@ CREATE TABLE `tender_info` (
   `is_awarded` char(1) DEFAULT NULL COMMENT '是否得標',
   `organization_type` varchar(45) DEFAULT NULL COMMENT '組織型態',
   `industry_type` varchar(45) DEFAULT NULL COMMENT '廠商業別',
-  `address` varchar(100) DEFAULT NULL COMMENT '廠商地址',
-  `address_eng` varchar(200) DEFAULT NULL COMMENT '廠商地址(英)',
+  `address` varchar(1000) DEFAULT NULL COMMENT '廠商地址',
+  `address_eng` varchar(2000) DEFAULT NULL COMMENT '廠商地址(英)',
   `tel` varchar(45) DEFAULT NULL COMMENT '廠商電話',
   `award_price` decimal(10,0) DEFAULT NULL COMMENT '決標金額',
   `country` varchar(45) DEFAULT NULL COMMENT '得標廠商國別',
@@ -80,7 +80,7 @@ CREATE TABLE `tender_award_item` (
   `tender_case_no` varchar(45) NOT NULL COMMENT '標案案號',
   `item_sn` int(11) NOT NULL COMMENT '品項流水號',
   `tender_sn` int(11) NOT NULL COMMENT '廠商流水號',
-  `item_name` varchar(100) DEFAULT NULL COMMENT '品項名稱',
+  `item_name` varchar(1000) DEFAULT NULL COMMENT '品項名稱',
   `unit` varchar(20) DEFAULT NULL COMMENT '單位',
   `is_unit_price_x_qty_lowest` char(1) DEFAULT NULL COMMENT '是否以單價及預估需求數量之乘積決定最低標',
   `awarded_tenderer` varchar(100) DEFAULT NULL COMMENT '得標廠商',
@@ -98,7 +98,7 @@ CREATE TABLE `evaluation_committee_info` (
   `sn` int(11) NOT NULL COMMENT '項次',
   `is_attend` char(1) DEFAULT NULL COMMENT '出席會議',
   `name` varchar(45) DEFAULT NULL COMMENT '姓名',
-  `occupation` varchar(45) DEFAULT NULL COMMENT '職業',
+  `occupation` varchar(1000) DEFAULT NULL COMMENT '職業',
   PRIMARY KEY (`pk_atm_main`,`tender_case_no`,`sn`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
