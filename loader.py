@@ -102,17 +102,19 @@ def load(cnx, file_name):
 
         cnx.commit()
     except mysql.connector.Error as e:
-        logger.warn('Fail to update database (pkAtmMain: {}, tenderCaseNo: {})\n\t{}'.format(pk_atm_main,
-                                                                                             tender_case_no,
-                                                                                             e))
+        outstr = 'Fail to update database (pkAtmMain: {}, tenderCaseNo: {})\n\t{}'.format(pk_atm_main,
+                                                                                          tender_case_no,
+                                                                                          e)
+        logger.warn(outstr)
         with open('load.err', 'a', encoding='utf-8') as err_file:
-            err_file.write('DB_ERR\t{}\t{})\n'.format(pk_atm_main, tender_case_no))
+            err_file.write(outstr)
     except AttributeError as e:
-        logger.warn('Corrupted content. Update skipped (pkAtmMain: {}, tenderCaseNo: {})\n\t{}'.format(pk_atm_main,
-                                                                                                       tender_case_no,
-                                                                                                       e))
+        outstr = 'Corrupted content. Update skipped (pkAtmMain: {}, tenderCaseNo: {})\n\t{}'.format(pk_atm_main,
+                                                                                                    tender_case_no,
+                                                                                                    e)
+        logger.warn(outstr)
         with open('load.err', 'a', encoding='utf-8') as err_file:
-            err_file.write('CONTENT_ERR\t{}\t{})\n'.format(pk_atm_main, tender_case_no))
+            err_file.write(outstr)
 
 
 def parse_args():
