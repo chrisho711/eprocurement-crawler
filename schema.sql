@@ -61,7 +61,7 @@ CREATE TABLE `tender_info` (
   `organization_type` varchar(45) DEFAULT NULL COMMENT '組織型態',
   `industry_type` varchar(45) DEFAULT NULL COMMENT '廠商業別',
   `address` varchar(1000) DEFAULT NULL COMMENT '廠商地址',
-  `address_eng` varchar(2000) DEFAULT NULL COMMENT '廠商地址(英)',
+  `address_eng` varchar(1000) DEFAULT NULL COMMENT '廠商地址(英)',
   `tel` varchar(45) DEFAULT NULL COMMENT '廠商電話',
   `award_price` decimal(10,0) DEFAULT NULL COMMENT '決標金額',
   `country` varchar(45) DEFAULT NULL COMMENT '得標廠商國別',
