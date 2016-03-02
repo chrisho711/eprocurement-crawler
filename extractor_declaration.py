@@ -168,7 +168,7 @@ def get_organization_info_dic(root_element):
 
     returned_dic = {}
     mapper = organization_info_map
-    award_table_tr = root_element.findAll('tr', {'class': 'award_table_tr_1'})
+    award_table_tr = root_element.findAll('tr', {'class': 'tender_table_tr_1'})
     for tr in award_table_tr:
         th = tr.find('th')
         if th is not None:
@@ -192,7 +192,7 @@ def get_procurement_info_dic(root_element):
 
     returned_dic = {}
     mapper = procurement_info_map
-    award_table_tr = root_element.findAll('tr', {'class': 'award_table_tr_2'})
+    award_table_tr = root_element.findAll('tr', {'class': 'tender_table_tr_2'})
     for tr in award_table_tr:
         th = tr.find('th')
         if th is not None:
@@ -224,167 +224,13 @@ def get_procurement_info_dic(root_element):
     return returned_dic
 
 
-def get_tender_info_dic(root_element):
+def get_declaration_info_dic(root_element):
     if root_element is None:
         return None
 
     returned_dic = {}
-    mapper = tender_map
-    award_table_tr = root_element.findAll('tr', {'class': 'award_table_tr_3'})
-    for tr in award_table_tr:
-        tb = tr.find('table')
-        grp_num = 0
-        if tb is not None:
-            for r in tb.findAll('tr'):
-                th_find = r.find('th')
-                if th_find is None:
-                    continue
-                th_name = remove_space(th_find.text)
-                m = re.match(r'投標廠商(\d+)', th_name)
-                if m is not None:
-                    grp_num = int(m.group(1))
-                    returned_dic[grp_num] = {'tender_sn': grp_num}
-                else:
-                    if th_name in mapper:
-                        key = mapper[th_name][0]
-                        content = r.find('td').text
-                        if len(mapper[th_name]) == 2:
-                            returned_dic[grp_num][key] = mapper[th_name][1](content)
-                        else:
-                            returned_dic[grp_num][key] = content
-
-                    # Special case
-                    if th_name == '履約起迄日期':
-                        content = remove_space(r.find('td').text)
-                        date_range = content.split('－')
-                        returned_dic[grp_num]['fulfill_date_start'] = date_conversion(date_range[0])
-                        returned_dic[grp_num]['fulfill_date_end'] = date_conversion(date_range[1])
-
-    # Print returned_dic
-    if logging.getLogger().isEnabledFor(logging.DEBUG):
-        for grp_num in returned_dic:
-            for k, v in returned_dic[grp_num].items():
-                logger.debug('{}\t{}\t{}'.format(grp_num, k, v))
-
-    return returned_dic
-
-
-def get_tender_award_item_dic(root_element):
-    if root_element is None:
-        return None
-
-    returned_dic = {}
-    mapper = tender_award_item_map
-    award_table_tr = root_element.findAll('tr', {'class': 'award_table_tr_4'})
-    for tr in award_table_tr:
-        tb = tr.find('table')
-        if tb is not None:
-            item_num = 0
-            item_name = None
-            unit = None
-            is_upxql = None
-            grp_num = 0
-            for r in tb.findAll('tr'):
-                if r.find('th') is not None:
-                    th_name = remove_space(r.find('th').text)
-                    m = re.match(r'第(\d+)品項', th_name)
-                    m2 = re.match(r'得標廠商(\d+)', th_name)
-                    if m is not None:
-                        item_num = int(m.group(1))
-                        returned_dic[item_num] = {}
-                    elif th_name == '品項名稱':
-                        content = r.find('td').text
-                        item_name = mapper[th_name][1](content) if len(mapper[th_name]) == 2 else content
-                    elif th_name == '單位':
-                        content = r.find('td').text
-                        if content is not None:
-                            unit = mapper[th_name][1](content) if len(mapper[th_name]) == 2 else content
-                        else:
-                            unit = None
-                    elif th_name == '是否以單價及預估需求數量之乘積決定最低標':
-                        content = r.find('td').text
-                        if content is not None:
-                            is_upxql = mapper[th_name][1](content) if len(mapper[th_name]) == 2 else content
-                        else:
-                            is_upxql = None
-                    elif m2 is not None and item_num > 0:
-                        grp_num = int(m2.group(1))
-                        if grp_num > 0:
-                            returned_dic[item_num][grp_num] = {
-                                'item_sn': item_num,
-                                'tender_sn': grp_num,
-                                'item_name': item_name}
-                            if unit is not None:
-                                returned_dic[item_num][grp_num]['unit'] = unit
-                            if is_upxql is not None:
-                                returned_dic[item_num][grp_num]['is_unit_price_x_qty_lowest'] = is_upxql
-                    elif item_num > 0 and grp_num > 0:
-                        if th_name in mapper and th_name != '原產地國別':
-                            key = mapper[th_name][0]
-                            content = r.find('td').text
-                            if len(mapper[th_name]) == 2:
-                                returned_dic[item_num][grp_num][key] = mapper[th_name][1](content)
-                            else:
-                                returned_dic[item_num][grp_num][key] = content
-
-                        # Special case
-                        if th_name == '原產地國別':
-                            ctable = r.find('table')
-                            if ctable is not None:
-                                for row in ctable.findAll('tr'):
-                                    tds = row.findAll('td')
-                                    header = remove_space(tds[0].text)
-                                    if header in mapper:
-                                        key = mapper[header][0]
-                                        content = tds[1].text
-                                        if len(mapper[header]) == 2:
-                                            returned_dic[item_num][grp_num][key] = mapper[header][1](content)
-                                        else:
-                                            returned_dic[item_num][grp_num][key] = content
-
-    # Print returned_dic
-    if logging.getLogger().isEnabledFor(logging.DEBUG):
-        for item_k, item_v in returned_dic.items():
-            for tender_k, tender_v in item_v.items():
-                for detail_k, detail_v in tender_v.items():
-                    logger.debug('Item: {}, tender: {}, {}\t{}'.format(item_k, tender_k, detail_k, detail_v))
-
-    return returned_dic
-
-
-def get_evaluation_committee_info_list(root_element):
-    if root_element is None:
-        return None
-
-    returned_list = []
-    mapper = evaluation_committee_info_map
-    mat_venderargutd = root_element.find('td', {'id': 'mat_venderArguTd'})
-    if mat_venderargutd is not None:
-        committee = mat_venderargutd.findAll('td')
-        if committee is not None and len(committee) > 0 and len(committee) % 4 == 0:
-            for i in range(0, int(len(committee) / 4)):
-                rec = {mapper['項次'][0]: int(committee[i * 4].text.strip()),
-                       mapper['出席會議'][0]: yesno_conversion(committee[i * 4 + 1].text.strip()),
-                       mapper['姓名'][0]: remove_space(committee[i * 4 + 2].text.strip()),
-                       mapper['職業'][0]: remove_space(committee[i * 4 + 3].text.strip())}
-                returned_list.append(rec)
-
-    # Print returned_dic
-    if logging.getLogger().isEnabledFor(logging.DEBUG):
-        for c in returned_list:
-            for k, v in c.items():
-                logger.debug('{}\t{}'.format(k, v))
-
-    return returned_list
-
-
-def get_award_info_dic(root_element):
-    if root_element is None:
-        return None
-
-    returned_dic = {}
-    mapper = award_info_map
-    award_table_tr = root_element.findAll('tr', {'class': 'award_table_tr_6'})
+    mapper = declaration_info_map
+    award_table_tr = root_element.findAll('tr', {'class': 'tender_table_tr_3'})
     for tr in award_table_tr:
         th = tr.find('th')
         if th is not None:
@@ -394,16 +240,53 @@ def get_award_info_dic(root_element):
                 content = tr.find('td').text
                 returned_dic[key] = mapper[th_name][1](content) if len(mapper[th_name]) == 2 else content
 
-            # Special case
-            if th_name == '履約執行機關':
-                content = remove_space(tr.find('td').text)
-                m_str = r'.*機關代碼：(?P<id>[a-zA-Z0-9\.]+).*機關名稱：(?P<name>.+)'
-                m = re.match(m_str, content)
-                if m is not None:
-                    returned_dic['fulfill_execution_org_id'] = \
-                        remove_space(m.group('id')) if m.group('id') is not None else content
-                    returned_dic['fulfill_execution_org_name'] = \
-                        remove_space(m.group('name')) if m.group('name') is not None else content
+    # Print returned_dic
+    if logging.getLogger().isEnabledFor(logging.DEBUG):
+        for k, v in returned_dic.items():
+            logger.debug('{}\t{}'.format(k, v))
+
+    return returned_dic
+
+
+def get_attend_info_dic(root_element):
+    if root_element is None:
+        return None
+
+    returned_dic = {}
+    mapper = attend_info_map
+    award_table_tr = root_element.findAll('tr', {'class': 'tender_table_tr_4'})
+    for tr in award_table_tr:
+        th = tr.find('th')
+        if th is not None:
+            th_name = remove_space(th.text)
+            if th_name in mapper:
+                key = mapper[th_name][0]
+                content = tr.find('td').text
+                returned_dic[key] = mapper[th_name][1](content) if len(mapper[th_name]) == 2 else content
+
+    # Print returned_dic
+    if logging.getLogger().isEnabledFor(logging.DEBUG):
+        for k, v in returned_dic.items():
+            logger.debug('{}\t{}'.format(k, v))
+
+    return returned_dic
+
+
+def get_other_info_dic(root_element):
+    if root_element is None:
+        return None
+
+    returned_dic = {}
+    mapper = other_info_map
+    award_table_tr = root_element.findAll('tr', {'class': 'tender_table_tr_5'})
+    for tr in award_table_tr:
+        th = tr.find('th')
+        if th is not None:
+            th_name = remove_space(th.text)
+            if th_name in mapper:
+                key = mapper[th_name][0]
+                content = tr.find('td').text
+                returned_dic[key] = mapper[th_name][1](content) if len(mapper[th_name]) == 2 else content
 
     # Print returned_dic
     if logging.getLogger().isEnabledFor(logging.DEBUG):
@@ -434,7 +317,6 @@ if __name__ == '__main__':
 
     get_organization_info_dic(root_element)
     get_procurement_info_dic(root_element)
-    get_tender_info_dic(root_element)
-    get_tender_award_item_dic(root_element)
-    get_evaluation_committee_info_list(root_element)
-    get_award_info_dic(root_element)
+    get_declaration_info_dic(root_element)
+    get_attend_info_dic(root_element)
+    get_other_info_dic(root_element)
