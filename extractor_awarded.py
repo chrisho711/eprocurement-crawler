@@ -18,15 +18,6 @@ _ERRCODE_FILENAME = 3
 logger = logging.getLogger(__name__)
 
 
-def get_root_element(fname):
-    f = open(fname, 'r')
-    response_text = f.read()
-    f.close()
-    soup = BeautifulSoup(''.join(response_text), 'lxml')
-    tender_table = soup.find('table', {'class': 'table_block tender_table'})
-    return tender_table
-
-
 def init(filename):
     f = open(filename, 'r', encoding='utf-8')
     response_text = f.read()
