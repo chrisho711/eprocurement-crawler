@@ -174,7 +174,7 @@ CREATE TABLE `tender_declaration_info` (
   /* 領投開標 */
   `is_elec_receive_tender` char(1) DEFAULT NULL COMMENT '是否提供電子領標',
   `is_elec_submit_tender` char(1) DEFAULT NULL COMMENT '是否提供電子投標',
-  `submit_date` date DEFAULT NULL COMMENT '截止投標',
+  `submit_deadline` date DEFAULT NULL COMMENT '截止投標',
   `award_date` date DEFAULT NULL COMMENT '開標時間',
   `award_address` varchar(45) DEFAULT NULL COMMENT '開標地點',
   `is_tender_bond` char(1) DEFAULT NULL COMMENT '是否須繳納押標金',
@@ -187,6 +187,7 @@ CREATE TABLE `tender_declaration_info` (
   `is_post_bulletin` char(1) DEFAULT NULL COMMENT '是否刊登公報',
   `is_authorities_template` char(1) DEFAULT NULL COMMENT '本案採購契約是否採用主管機關訂定之範本',
   `project_type` varchar(45) DEFAULT NULL COMMENT '歸屬計畫類別',
+  `is_disaster_reconstruct` char(1) DEFAULT NULL COMMENT '是否屬災區重建工程',
   `qualify_abstract` varchar(500) DEFAULT NULL COMMENT '廠商資格摘要',
   `is_qualify_fulfill` char(1) DEFAULT NULL COMMENT '是否訂有與履約能力有關之基本資格',
   PRIMARY KEY (`primary_key`)

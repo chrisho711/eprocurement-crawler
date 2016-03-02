@@ -143,7 +143,7 @@ attend_info_map = {
     # <tr class="tender_table_tr_4">
     '是否提供電子領標': ('is_elec_receive_tender', yesno_conversion),
     '是否提供電子投標': ('is_elec_submit_tender', yesno_conversion),
-    '截止投標': ('submit_date', date_conversion),
+    '截止投標': ('submit_deadline', date_conversion),
     '開標時間': ('award_date', date_conversion),
     '開標地點': ('award_address', strip),
     '是否須繳納押標金': ('is_tender_bond', yesno_conversion),
@@ -158,6 +158,7 @@ other_info_map = {
     '是否刊登公報': ('is_post_bulletin', yesno_conversion),
     '本案採購契約是否採用主管機關訂定之範本': ('is_authorities_template', yesno_conversion),
     '歸屬計畫類別': ('project_type', remove_space),
+    '是否屬災區重建工程': ('is_disaster_reconstruct', remove_space),
     '廠商資格摘要': ('qualify_abstract', strip),
     '是否訂有與履約能力有關之基本資格': ('is_qualify_fulfill', yesno_conversion)}
 
@@ -168,14 +169,14 @@ def get_organization_info_dic(root_element):
 
     returned_dic = {}
     mapper = organization_info_map
-    award_table_tr = root_element.findAll('tr', {'class': 'tender_table_tr_1'})
-    for tr in award_table_tr:
+    tender_table_tr = root_element.findAll('tr', {'class': 'tender_table_tr_1'})
+    for tr in tender_table_tr:
         th = tr.find('th')
         if th is not None:
             th_name = remove_space(th.text)
             if th_name in mapper:
                 key = mapper[th_name][0]
-                content = tr.find('td').text
+                content = tr.find('td', {'class': 'newstop'}).text
                 returned_dic[key] = mapper[th_name][1](content) if len(mapper[th_name]) == 2 else content
 
     # Print returned_dic
@@ -192,20 +193,20 @@ def get_procurement_info_dic(root_element):
 
     returned_dic = {}
     mapper = procurement_info_map
-    award_table_tr = root_element.findAll('tr', {'class': 'tender_table_tr_2'})
-    for tr in award_table_tr:
+    tender_table_tr = root_element.findAll('tr', {'class': 'tender_table_tr_2'})
+    for tr in tender_table_tr:
         th = tr.find('th')
         if th is not None:
             th_name = remove_space(th.text)
             if th_name in mapper:
                 key = mapper[th_name][0]
-                content = tr.find('td').text
+                content = tr.find('td', {'class': 'newstop'}).text
                 returned_dic[key] = mapper[th_name][1](content) if len(mapper[th_name]) == 2 else content
                 continue
 
             # Special case
             if th_name == '是否適用條約或協定之採購':
-                content = remove_space(tr.find('td').text)
+                content = remove_space(tr.find('td', {'class': 'newstop'}).text)
                 m_str = r'.*\(GPA\)：(?P<gpa>[是否]).*\(ANZTEC\)：(?P<anztec>[是否]).*\(ASTEP\)：(?P<astep>[是否]).*'
                 m = re.match(m_str, content)
                 if m is not None:
@@ -230,14 +231,14 @@ def get_declaration_info_dic(root_element):
 
     returned_dic = {}
     mapper = declaration_info_map
-    award_table_tr = root_element.findAll('tr', {'class': 'tender_table_tr_3'})
-    for tr in award_table_tr:
+    tender_table_tr = root_element.findAll('tr', {'class': 'tender_table_tr_3'})
+    for tr in tender_table_tr:
         th = tr.find('th')
         if th is not None:
             th_name = remove_space(th.text)
             if th_name in mapper:
                 key = mapper[th_name][0]
-                content = tr.find('td').text
+                content = tr.find('td', {'class': 'newstop'}).text
                 returned_dic[key] = mapper[th_name][1](content) if len(mapper[th_name]) == 2 else content
 
     # Print returned_dic
@@ -254,14 +255,14 @@ def get_attend_info_dic(root_element):
 
     returned_dic = {}
     mapper = attend_info_map
-    award_table_tr = root_element.findAll('tr', {'class': 'tender_table_tr_4'})
-    for tr in award_table_tr:
+    tender_table_tr = root_element.findAll('tr', {'class': 'tender_table_tr_4'})
+    for tr in tender_table_tr:
         th = tr.find('th')
         if th is not None:
             th_name = remove_space(th.text)
             if th_name in mapper:
                 key = mapper[th_name][0]
-                content = tr.find('td').text
+                content = tr.find('td', {'class': 'newstop'}).text
                 returned_dic[key] = mapper[th_name][1](content) if len(mapper[th_name]) == 2 else content
 
     # Print returned_dic
@@ -278,14 +279,14 @@ def get_other_info_dic(root_element):
 
     returned_dic = {}
     mapper = other_info_map
-    award_table_tr = root_element.findAll('tr', {'class': 'tender_table_tr_5'})
-    for tr in award_table_tr:
+    tender_table_tr = root_element.findAll('tr', {'class': 'tender_table_tr_5'})
+    for tr in tender_table_tr:
         th = tr.find('th')
         if th is not None:
             th_name = remove_space(th.text)
             if th_name in mapper:
                 key = mapper[th_name][0]
-                content = tr.find('td').text
+                content = tr.find('td', {'class': 'newstop'}).text
                 returned_dic[key] = mapper[th_name][1](content) if len(mapper[th_name]) == 2 else content
 
     # Print returned_dic
