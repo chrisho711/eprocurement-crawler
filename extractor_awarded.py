@@ -18,8 +18,8 @@ _ERRCODE_FILENAME = 3
 logger = logging.getLogger(__name__)
 
 
-def get_root_element(file_name):
-    f = open(file_name, 'r')
+def get_root_element(fname):
+    f = open(fname, 'r')
     response_text = f.read()
     f.close()
     soup = BeautifulSoup(''.join(response_text), 'lxml')
@@ -32,13 +32,13 @@ def init(filename):
     response_text = f.read()
     f.close()
     soup = BeautifulSoup(''.join(response_text), 'lxml')
-    pk_atm_main = soup.find('div', {'class': 'pkAtmMain'}).text
-    tender_case_no = soup.find('div', {'class': 'tenderCaseNo'}).text
-    root_element = soup.find('table', {'class': 'table_block tender_table'})
+    pk = soup.find('div', {'class': 'pkAtmMain'}).text
+    case_no = soup.find('div', {'class': 'tenderCaseNo'}).text
+    root = soup.find('table', {'class': 'table_block tender_table'})
     logger.debug('pkAtmMain: ' + pk_atm_main)
     logger.debug('tenderCaseNo: ' + tender_case_no)
 
-    return pk_atm_main, tender_case_no, root_element
+    return pk, case_no, root
 
 
 def strip(element):
@@ -475,7 +475,7 @@ if __name__ == '__main__':
         logger.error('File not found: ' + file_name)
         quit(_ERRCODE_FILENAME)
 
-    pk_pk_atm_main, tender_case_no, root_element = init(file_name)
+    pk_atm_main, tender_case_no, root_element = init(file_name)
 
     get_organization_info_dic(root_element)
     get_procurement_info_dic(root_element)
