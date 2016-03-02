@@ -6,6 +6,7 @@ import os
 import logging
 import mysql.connector
 import extractor_awarded as eta
+import extractor_declaration as etd
 from datetime import datetime, date
 from mysql.connector import errorcode
 from optparse import OptionParser
