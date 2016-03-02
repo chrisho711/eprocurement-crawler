@@ -52,16 +52,24 @@ if __name__ == '__main__':
         for line in f.readlines():
             page_link = line.strip()
 
-            m = re.match(r'([^ ]+)pkAtmMain=(?P<pkAtmMain>\w+)&tenderCaseNo=(?P<tenderCaseNo>[\w\-]+)', page_link)
-            if m is None:
-                continue
-
-            pkAtmMain = m.group('pkAtmMain')
-            tenderCaseNo = m.group('tenderCaseNo')
-            if pkAtmMain is None or tenderCaseNo is None:
-                continue
-
-            filename = "%s_%s" % (pkAtmMain, tenderCaseNo)
+            m1 = re.match(r'([^ ]+)pkAtmMain=(?P<pkAtmMain>\w+)&tenderCaseNo=(?P<tenderCaseNo>[\w\-]+)', page_link)
+            if m1 is None:
+                m2 = re.match(r'([^ ]+)primaryKey=(?P<primaryKey>[\w\-]+)', page_link)
+                if m2 is None:
+                    continue
+                else:
+                    primaryKey = m2.group('primaryKey')
+                    if primaryKey is None:
+                        continue
+                    else:
+                        filename = primaryKey
+            else:
+                pkAtmMain = m1.group('pkAtmMain')
+                tenderCaseNo = m1.group('tenderCaseNo')
+                if pkAtmMain is None or tenderCaseNo is None:
+                    continue
+                else:
+                    filename = "%s_%s" % (pkAtmMain, tenderCaseNo)
 
             try:
                 request_get = requests.get(page_link)
@@ -72,9 +80,15 @@ if __name__ == '__main__':
 
                 with open('{}/{}.txt'.format(directory, filename), 'w', encoding='utf-8') as bid_detail:
                     bid_detail.write(print_area.prettify())
-                    bid_detail.write('<div class="pkAtmMain">' + pkAtmMain + '</div>\n')
-                    bid_detail.write('<div class="tenderCaseNo">' + tenderCaseNo + '</div>')
-                    logger.info('Writing bid detail (pkAtmMain: {}, tenderCaseNo: {})'.format(pkAtmMain, tenderCaseNo))
+                    if m1 is not None:
+                        bid_detail.write('<div class="pkAtmMain">' + pkAtmMain + '</div>\n')
+                        bid_detail.write('<div class="tenderCaseNo">' + tenderCaseNo + '</div>')
+                        logger.info(
+                            'Writing bid detail (pkAtmMain: {}, tenderCaseNo: {})'.format(pkAtmMain, tenderCaseNo))
+                    else:
+                        bid_detail.write('<div class="primaryKey">' + primaryKey + '</div>\n')
+                        logger.info(
+                            'Writing bid detail (primaryKey: {})'.format(primaryKey))
             except:
                 with open(options.list_filename.strip() + '.download.err', 'a', encoding='utf-8') as err_file:
                     err_file.write(page_link + '\n')

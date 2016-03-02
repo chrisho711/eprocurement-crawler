@@ -5,7 +5,7 @@
 import os
 import logging
 import mysql.connector
-import extractor as et
+import extractor_awarded as eta
 from datetime import datetime, date
 from mysql.connector import errorcode
 from optparse import OptionParser
@@ -59,7 +59,7 @@ def gen_insert_sql(table, data_dict):
 
 
 def load(cnx, file_name):
-    pk_atm_main, tender_case_no, root_element = et.init(file_name)
+    pk_atm_main, tender_case_no, root_element = eta.init(file_name)
     if root_element is None \
             or pk_atm_main is None or tender_case_no is None \
             or pk_atm_main == '' or tender_case_no == '':
@@ -72,31 +72,31 @@ def load(cnx, file_name):
     try:
         cur = cnx.cursor(buffered=True)
 
-        data = et.get_organization_info_dic(root_element)
+        data = eta.get_organization_info_dic(root_element)
         data.update(pk)
         cur.execute(gen_insert_sql('organization_info', data))
 
-        data = et.get_procurement_info_dic(root_element)
+        data = eta.get_procurement_info_dic(root_element)
         data.update(pk)
         cur.execute(gen_insert_sql('procurement_info', data))
 
-        data = et.get_tender_info_dic(root_element)
+        data = eta.get_tender_info_dic(root_element)
         for tender in data.values():
             tender.update(pk)
             cur.execute(gen_insert_sql('tender_info', tender))
 
-        data = et.get_tender_award_item_dic(root_element)
+        data = eta.get_tender_award_item_dic(root_element)
         for item in data.values():
             for tender in item.values():
                 tender.update(pk)
                 cur.execute(gen_insert_sql('tender_award_item', tender))
 
-        data = et.get_evaluation_committee_info_list(root_element)
+        data = eta.get_evaluation_committee_info_list(root_element)
         for committee in data:
             committee.update(pk)
             cur.execute(gen_insert_sql('evaluation_committee_info', committee))
 
-        data = et.get_award_info_dic(root_element)
+        data = eta.get_award_info_dic(root_element)
         data.update(pk)
         cur.execute(gen_insert_sql('award_info', data))
 
