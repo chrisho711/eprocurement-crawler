@@ -188,7 +188,7 @@ CREATE TABLE `tender_declaration_info` (
   `is_authorities_template` char(1) DEFAULT NULL COMMENT '本案採購契約是否採用主管機關訂定之範本',
   `project_type` varchar(45) DEFAULT NULL COMMENT '歸屬計畫類別',
   `is_disaster_reconstruct` char(1) DEFAULT NULL COMMENT '是否屬災區重建工程',
-  `qualify_abstract` varchar(500) DEFAULT NULL COMMENT '廠商資格摘要',
+  `qualify_abstract` varchar(2000) DEFAULT NULL COMMENT '廠商資格摘要',
   `is_qualify_fulfill` char(1) DEFAULT NULL COMMENT '是否訂有與履約能力有關之基本資格',
   PRIMARY KEY (`primary_key`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
