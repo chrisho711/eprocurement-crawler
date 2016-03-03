@@ -59,7 +59,38 @@ def gen_insert_sql(table, data_dict):
     return sql_str
 
 
-def load(cnx, file_name):
+def load_declaration(cnx, file_name):
+    primary_key, root_element = etd.init(file_name)
+    if root_element is None or primary_key is None or primary_key == '':
+        logger.error('Fail to extract data from file: ' + file_name)
+        return
+
+    logger.info('Updating database (primaryKey: {})'.format(primary_key))
+
+    try:
+        cur = cnx.cursor(buffered=True)
+
+        data = etd.get_organization_info_dic(root_element)
+        data.update(etd.get_procurement_info_dic(root_element))
+        data.update(etd.get_declaration_info_dic(root_element))
+        data.update(etd.get_attend_info_dic(root_element))
+        data.update(etd.get_other_info_dic(root_element))
+        data['primary_key'] = primary_key
+        cur.execute(gen_insert_sql('tender_declaration_info', data))
+        cnx.commit()
+    except mysql.connector.Error as e:
+        outstr = 'Fail to update database (primary_key: {})\n\t{}'.format(primary_key, e)
+        logger.warn(outstr)
+        with open('load.err', 'a', encoding='utf-8') as err_file:
+            err_file.write(outstr)
+    except AttributeError as e:
+        outstr = 'Corrupted content. Update skipped (primary_key: {})\n\t{}'.format(primary_key, e)
+        logger.warn(outstr)
+        with open('load.err', 'a', encoding='utf-8') as err_file:
+            err_file.write(outstr)
+
+
+def load_awarded(cnx, file_name):
     pk_atm_main, tender_case_no, root_element = eta.init(file_name)
     if root_element is None \
             or pk_atm_main is None or tender_case_no is None \
@@ -134,6 +165,9 @@ def parse_args():
                  dest='database', type='string', default='')
     p.add_option('-o', '--port', action='store',
                  dest='port', type='string', default='3306')
+    p.add_option("-a", '--declaration', action="store_true",
+                 dest='is_declaration')
+
     return p.parse_args()
 
 
@@ -145,6 +179,7 @@ if __name__ == '__main__':
     host = options.host.strip()
     port = options.port.strip()
     database = options.database.strip()
+    is_declaration = options.is_declaration
     if user == '' or password == '' or host == '' or port == '' or database == '':
         logger.error('Database connection information is incomplete.')
         quit()
@@ -165,7 +200,10 @@ if __name__ == '__main__':
             if not os.path.isfile(f):
                 logger.error('File not found: ' + f)
             else:
-                load(db_connection, f)
+                if is_declaration:
+                    load_declaration(db_connection, f)
+                else:
+                    load_awarded(db_connection, f)
 
         d = options.directory.strip()
         if d != '':
@@ -174,7 +212,10 @@ if __name__ == '__main__':
             else:
                 for root, dirs, files in os.walk(d):
                     for f in files:
-                        load(db_connection, os.path.join(root, f))
+                        if is_declaration:
+                            load_declaration(db_connection, os.path.join(root, f))
+                        else:
+                            load_awarded(db_connection, os.path.join(root, f))
     except mysql.connector.Error as err:
         if err.errno == errorcode.ER_ACCESS_DENIED_ERROR:
             logger.error("Something is wrong with your user name or password.")
