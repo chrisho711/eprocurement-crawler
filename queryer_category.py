@@ -33,6 +33,8 @@ def parse_args():
                  dest='category_cd', type='string', default='')
     p.add_option('-f', '--list_filename', action='store',
                  dest='list_filename', type='string', default='bid_list.txt')
+    p.add_option("-d", '--declaration', action="store_true",
+                 dest='is_declaration')
     return p.parse_args()
 
 
@@ -65,6 +67,8 @@ if __name__ == '__main__':
     category_cd = options.category_cd.strip()
     logger.info('Main category: {}, category code: {}'.format(category_main, category_cd))
 
+    is_declaration = options.is_declaration
+
     with open(options.list_filename.strip(), 'w', encoding='utf-8') as bid_file:
         # Limit maximum search date span to be within 3 months (consider Feb. can has only 28 days)
         max_span = 89
@@ -80,7 +84,7 @@ if __name__ == '__main__':
             payload = {'searchMethod': 'true',
                        'proctrgCode': category_cd,
                        'isSpdt': 'N',
-                       'searchTarget': 'ATM',
+                       'searchTarget': ('TPAM' if is_declaration else 'ATM'),
                        'tenderStatusType': '4,5,21,29,9,22,23,30,34,10,24',
                        'tenderWay': '12,2,1,4,5,7,3,10,6',
                        'dmsProctrgCode1': category_cd if category_main == '1' else '',
@@ -94,7 +98,7 @@ if __name__ == '__main__':
                        'endDate': ad2roc(e_date, '/'),
                        'awardAnnounceStartDate': ad2roc(s_date, '/'),
                        'awardAnnounceEndDate': ad2roc(e_date, '/'),
-                       'tenderStatus': '4,5,21,29,9,22,23,30,34,10,24',
+                       'tenderStatus': ('' if is_declaration else '4,5,21,29,9,22,23,30,34,10,24'),
                        'proctrgCate': ''}
 
             try:
