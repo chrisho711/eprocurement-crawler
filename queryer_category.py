@@ -92,29 +92,22 @@ if __name__ == '__main__':
                        'pmsProctrgCate': category_main,
                        'dmsProctrgCode3': category_cd if category_main == '3' else '',
                        'tenderDateRadio': 'on',
-                       'tenderStartDate': '',
-                       'tenderEndDate': '',
+                       'tenderStartDate': (ad2roc(s_date, '/') if is_declaration else ''),
+                       'tenderEndDate': (ad2roc(e_date, '/') if is_declaration else ''),
                        'startDate': ad2roc(s_date, '/'),
                        'endDate': ad2roc(e_date, '/'),
-                       'awardAnnounceStartDate': ad2roc(s_date, '/'),
-                       'awardAnnounceEndDate': ad2roc(e_date, '/'),
+                       'awardAnnounceStartDate': ('' if is_declaration else ad2roc(s_date, '/')),
+                       'awardAnnounceEndDate': ('' if is_declaration else ad2roc(e_date, '/')),
                        'tenderStatus': ('' if is_declaration else '4,5,21,29,9,22,23,30,34,10,24'),
                        'proctrgCate': ''}
 
             try:
                 rs = requests.session()
-                if is_declaration:
-                    user_post = rs.post('http://web.pcc.gov.tw/tps/pss/tender.do?'
-                                        'searchMode=common&'
-                                        'searchType=basic&'
-                                        'method=search',
-                                        data=payload)
-                else:
-                    user_post = rs.post('http://web.pcc.gov.tw/tps/pss/tender.do?'
-                                        'searchMode=common&'
-                                        'searchType=advance&'
-                                        'method=search',
-                                        data=payload)
+                user_post = rs.post('http://web.pcc.gov.tw/tps/pss/tender.do?' +
+                                    'searchMode=common&' +
+                                    ('searchType=basic&' if is_declaration else 'searchType=advance&') +
+                                    'method=search',
+                                    data=payload)
                 response_text = user_post.text.encode('utf8')
 
                 soup = BeautifulSoup(response_text, 'lxml')
@@ -128,21 +121,9 @@ if __name__ == '__main__':
                     err_file.write(str(s_date) + '\t' + str(e_date) + '\n')
                 continue
 
-            if is_declaration:
-                page_format = 'http://web.pcc.gov.tw/tps/pss/tender.do?' \
-                              'searchMode=common&' \
-                              'searchType=basic&' \
-                              'method=search&' \
-                              'isSpdt=&' \
-                              'pageIndex=%d'
-            else:
-                page_format = 'http://web.pcc.gov.tw/tps/pss/tender.do?' \
-                              'searchMode=common&' \
-                              'searchType=advance&' \
-                              'searchTarget=ATM&' \
-                              'method=search&' \
-                              'isSpdt=&' \
-                              'pageIndex=%d'
+            page_format = 'http://web.pcc.gov.tw/tps/pss/tender.do?searchMode=common&'
+            page_format += 'searchType=basic&' if is_declaration else 'searchType=advance&searchTarget=ATM&'
+            page_format += 'method=search&isSpdt=&pageIndex=%d'
 
             for page in range(1, page_number + 1):
                 logger.info('\tRetrieving bid URLs... (%d / %d)', min(page * 100, rec_number), rec_number)
@@ -155,16 +136,10 @@ if __name__ == '__main__':
                     bid_rows = bid_table.findAll('tr')[1:-1]
                     for bid_row in bid_rows:
                         link = [tag['href'] for tag in bid_row.findAll('a', {'href': True})][0]
-                        if is_declaration:
-                            link_href = parse.urljoin('http://web.pcc.gov.tw/tps/pss/tender.do?'
-                                                      'searchMode=common&'
-                                                      'searchType=basic',
-                                                      link)
-                        else:
-                            link_href = parse.urljoin('http://web.pcc.gov.tw/tps/pss/tender.do?'
-                                                      'searchMode=common&'
-                                                      'searchType=advance',
-                                                      link)
+                        link_href = parse.urljoin('http://web.pcc.gov.tw/tps/pss/tender.do?' +
+                                                  'searchMode=common&' +
+                                                  ('searchType=basic' if is_declaration else 'searchType=advance'),
+                                                  link)
                         bid_file.write(link_href + '\n')
                     bid_file.flush()
                 except:
