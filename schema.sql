@@ -1,4 +1,4 @@
-CREATE DATABASE `TW_PROCUREMENT` /*!40100 DEFAULT CHARACTER SET utf8 */;
+CREATE DATABASE `TW_PROCUREMENT` /*!40100 DEFAULT CHARACTER SET utf8mb4 */;
 
 CREATE TABLE `organization_info` (
   `pk_atm_main` varchar(45) NOT NULL COMMENT '採購網主鍵',
@@ -11,7 +11,7 @@ CREATE TABLE `organization_info` (
   `tel` varchar(45) DEFAULT NULL COMMENT '聯絡電話',
   `fax` varchar(45) DEFAULT NULL COMMENT '傳真號碼',
   PRIMARY KEY (`pk_atm_main`,`tender_case_no`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 CREATE TABLE `procurement_info` (
   `pk_atm_main` varchar(45) NOT NULL COMMENT '採購網主鍵',
@@ -48,7 +48,7 @@ CREATE TABLE `procurement_info` (
   `project_type` varchar(45) DEFAULT NULL COMMENT '歸屬計畫類別',
   `is_authorities_template` char(1) DEFAULT NULL COMMENT '本案採購契約是否採用主管機關訂定之範本',
   PRIMARY KEY (`pk_atm_main`,`tender_case_no`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 CREATE TABLE `tender_info` (
   `pk_atm_main` varchar(45) NOT NULL COMMENT '採購網主鍵',
@@ -73,7 +73,7 @@ CREATE TABLE `tender_info` (
   `num_aboriginal` int(11) DEFAULT NULL COMMENT '已僱用原住民人數',
   `num_disability` int(11) DEFAULT NULL COMMENT '已僱用身心障礙者人數',
   PRIMARY KEY (`pk_atm_main`,`tender_case_no`,`tender_sn`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 CREATE TABLE `tender_award_item` (
   `pk_atm_main` varchar(45) NOT NULL COMMENT '採購網主鍵',
@@ -90,7 +90,7 @@ CREATE TABLE `tender_award_item` (
   `source_country` varchar(100) DEFAULT NULL COMMENT '原產地國別',
   `source_award_price` decimal(10,0) DEFAULT NULL COMMENT '原產地國別得標金額',
   PRIMARY KEY (`pk_atm_main`,`tender_case_no`,`item_sn`,`tender_sn`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 CREATE TABLE `evaluation_committee_info` (
   `pk_atm_main` varchar(45) NOT NULL COMMENT '採購網主鍵',
@@ -100,7 +100,7 @@ CREATE TABLE `evaluation_committee_info` (
   `name` varchar(45) DEFAULT NULL COMMENT '姓名',
   `occupation` varchar(1000) DEFAULT NULL COMMENT '職業',
   PRIMARY KEY (`pk_atm_main`,`tender_case_no`,`sn`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 CREATE TABLE `award_info` (
   `pk_atm_main` varchar(45) NOT NULL COMMENT '採購網主鍵',
@@ -121,7 +121,7 @@ CREATE TABLE `award_info` (
   `fulfill_execution_org_name` varchar(100) DEFAULT NULL COMMENT '履約執行機關名稱',
   `additional_info` varchar(2000) DEFAULT NULL COMMENT '附加說明',
   PRIMARY KEY (`pk_atm_main`,`tender_case_no`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 CREATE TABLE `tender_declaration_info` (
   /* 機關資料 */
@@ -191,4 +191,4 @@ CREATE TABLE `tender_declaration_info` (
   `qualify_abstract` varchar(2000) DEFAULT NULL COMMENT '廠商資格摘要',
   `is_qualify_fulfill` char(1) DEFAULT NULL COMMENT '是否訂有與履約能力有關之基本資格',
   PRIMARY KEY (`primary_key`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;

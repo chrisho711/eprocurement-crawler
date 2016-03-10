@@ -76,6 +76,8 @@ def load_declaration(cnx, file_name):
         data.update(etd.get_attend_info_dic(root_element))
         data.update(etd.get_other_info_dic(root_element))
         data['primary_key'] = primary_key
+
+        cur.execute('SET NAMES utf8mb4')
         cur.execute(gen_insert_sql('tender_declaration_info', data))
         cnx.commit()
     except mysql.connector.Error as e:
@@ -130,8 +132,9 @@ def load_awarded(cnx, file_name):
 
         data = eta.get_award_info_dic(root_element)
         data.update(pk)
-        cur.execute(gen_insert_sql('award_info', data))
 
+        cur.execute('SET NAMES utf8mb4')
+        cur.execute(gen_insert_sql('award_info', data))
         cnx.commit()
     except mysql.connector.Error as e:
         outstr = 'Fail to update database (pkAtmMain: {}, tenderCaseNo: {})\n\t{}'.format(pk_atm_main,
